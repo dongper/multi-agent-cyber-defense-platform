@@ -1,0 +1,18 @@
+{
+  "name": "联通智能体",
+  "short_name": "联通智能体",
+  "description": "中国联通智能体 AI 工作台",
+  "start_url": "/#/hermes/chat",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f4",
+  "theme_color": "#d91920",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
