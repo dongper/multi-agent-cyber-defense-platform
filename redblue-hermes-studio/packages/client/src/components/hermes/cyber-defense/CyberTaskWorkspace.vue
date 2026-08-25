@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
@@ -34,12 +34,11 @@ import {
   type ConversationSummary,
 } from '@/api/hermes/conversations'
 import { fetchSession } from '@/api/hermes/sessions'
-import { fetchSkills, fetchSkillUsageStats, type SkillInfo, type SkillUsageStats } from '@/api/hermes/skills'
 import { listWorkflows, type WorkflowRecord } from '@/api/hermes/workflows'
 import MarkdownRenderer from '@/components/hermes/chat/MarkdownRenderer.vue'
 
 const BOARD = 'cyber-defense'
-defineProps<{ embedded?: boolean }>()
+const props = defineProps<{ embedded?: boolean; createRequest?: number }>()
 const { t, locale } = useI18n()
 const router = useRouter()
 const toast = useMessage()
@@ -54,8 +53,6 @@ const taskDetail = ref<KanbanTaskDetail | null>(null)
 const selectedTaskId = ref<string | null>(null)
 const conversations = ref<ConversationSummary[]>([])
 const chatMessages = ref<ConversationMessage[]>([])
-const skillUsage = ref<SkillUsageStats | null>(null)
-const ctfSkills = ref<SkillInfo[]>([])
 const workflows = ref<WorkflowRecord[]>([])
 const stats = ref<KanbanStats>({ total: 0, by_status: {}, by_assignee: {} })
 const periodDays = ref(30)
@@ -78,7 +75,6 @@ const form = ref({
   body: '',
   scene: 'authorized-lab',
   priority: 2,
-  skills: [] as string[],
   authorized: false,
 })
 
@@ -102,11 +98,6 @@ const modeOptions = computed(() => [
   { label: t('cyberDefense.modes.red'), value: 'red' },
   { label: t('cyberDefense.modes.blue'), value: 'blue' },
 ])
-const skillOptions = computed(() => ctfSkills.value.map(skill => ({
-  label: skill.name,
-  value: skill.name,
-})))
-
 const selectedTask = computed(() => taskDetail.value?.task || null)
 const filteredTasks = computed(() => taskList.value
   .filter(task => taskFilter.value === 'all' || activeStatuses.has(task.status))
@@ -124,6 +115,7 @@ const toolCallCount = computed(() => periodConversations.value.reduce((sum, item
 const activeTaskCount = computed(() => Object.entries(stats.value.by_status)
   .filter(([status]) => activeStatuses.has(status))
   .reduce((sum, [, count]) => sum + count, 0))
+const completedTaskCount = computed(() => (stats.value.by_status.done || 0) + (stats.value.by_status.archived || 0))
 const workflowAgentCount = computed(() => {
   return workflows.value.reduce((total, workflow) => total + workflow.nodes.filter(raw => {
     const node = raw as Record<string, unknown>
@@ -163,10 +155,17 @@ function formatTime(value: number | null | undefined): string {
   }).format(new Date(timestamp))
 }
 
-function brandSafeText(value: string | null | undefined): string {
-  const text = String(value || '')
+function brandSafeText(value: string | null | undefined, hideCapabilityDetails = true): string {
+  let text = String(value || '')
     .replace(/Hermes Studio/gi, '红蓝队协同安全运营平台')
     .replace(/Hermes/gi, '安全智能体')
+  if (hideCapabilityDetails) {
+    text = text.split('\n').map(line => (
+      /CTF\s*技能|ctf-[a-z0-9_-]+/i.test(line)
+        ? '内部安全能力已按需加载（实现名称不在前端展示）。'
+        : line
+    )).filter((line, index, rows) => line !== rows[index - 1]).join('\n')
+  }
   if (/HTTP\s*402|Insufficient Balance/i.test(text)) return '模型服务余额不足，请检查当前模型账户额度后重试。'
   if (/HTTP\s*401|Unauthorized/i.test(text)) return '模型服务认证失败，请检查当前模型配置后重试。'
   if (/timeout|timed out/i.test(text)) return '本次请求等待超时，你可以重试或切换模型。'
@@ -178,7 +177,8 @@ function displayMessageContent(message: ConversationMessage): string {
   if (message.role === 'user') {
     const marker = '【操作员本轮请求】'
     const markerIndex = content.lastIndexOf(marker)
-    if (markerIndex >= 0) return brandSafeText(content.slice(markerIndex + marker.length).trim())
+    if (markerIndex >= 0) return brandSafeText(content.slice(markerIndex + marker.length).trim(), false)
+    return brandSafeText(content, false)
   }
   return brandSafeText(content)
 }
@@ -189,7 +189,6 @@ function resetForm() {
     body: '',
     scene: 'authorized-lab',
     priority: 2,
-    skills: [],
     authorized: false,
   }
 }
@@ -353,12 +352,7 @@ async function settleRun(taskId: string) {
         timestamp: Date.now(),
       })
     }
-    const [summaryRows, usage] = await Promise.all([
-      fetchConversationSummaries({ humanOnly: true, limit: 1000 }),
-      fetchSkillUsageStats(periodDays.value),
-    ])
-    conversations.value = summaryRows
-    skillUsage.value = usage
+    conversations.value = await fetchConversationSummaries({ humanOnly: true, limit: 1000 })
   } catch (error) {
     toast.error(errorText(error))
   } finally {
@@ -371,19 +365,12 @@ async function settleRun(taskId: string) {
 async function loadOverview(): Promise<void> {
   loading.value = true
   try {
-    const [summaryRows, skillData, usage, workflowRows] = await Promise.all([
+    const [summaryRows, workflowRows] = await Promise.all([
       fetchConversationSummaries({ humanOnly: true, limit: 1000 }),
-      fetchSkills(getActiveProfileName() || undefined),
-      fetchSkillUsageStats(periodDays.value),
       listWorkflows(getActiveProfileName()),
     ])
     conversations.value = summaryRows
-    skillUsage.value = usage
     workflows.value = workflowRows
-    ctfSkills.value = skillData.categories
-      .flatMap(category => category.skills)
-      .filter(skill => skill.enabled !== false && (/^ctf[-_]/i.test(skill.name) || /ctf/i.test(skill.description)))
-      .sort((a, b) => a.name.localeCompare(b.name))
     await loadTaskList()
     await loadTask(selectedTaskId.value)
   } catch (error) {
@@ -393,13 +380,8 @@ async function loadOverview(): Promise<void> {
   }
 }
 
-async function changePeriod(days: number) {
+function changePeriod(days: number) {
   periodDays.value = days
-  try {
-    skillUsage.value = await fetchSkillUsageStats(days)
-  } catch (error) {
-    toast.error(errorText(error))
-  }
 }
 
 async function selectTask(id: string) {
@@ -428,7 +410,7 @@ async function handleCreateTask() {
       ].join('\n'),
       priority: form.value.priority,
       triage: false,
-      skills: form.value.skills,
+      skills: [],
       goalMode: true,
     }, { board: BOARD })
     createVisible.value = false
@@ -446,14 +428,12 @@ async function handleCreateTask() {
 
 function buildRunInput(userInput: string): string {
   const task = selectedTask.value
-  const skillNames = task?.skills?.join(', ') || t('cyberDefense.noBoundSkills')
   return [
     t('cyberDefense.runInstruction'),
     '',
     `【${t('cyberDefense.taskContext')}】`,
     `${t('cyberDefense.taskTitle')}: ${task?.title || ''}`,
     `${t('cyberDefense.modeLabel')}: ${modeOptions.value.find(item => item.value === mode.value)?.label || mode.value}`,
-    `${t('cyberDefense.boundSkills')}: ${skillNames}`,
     task?.body || '',
     '',
     `【${t('cyberDefense.currentRequest')}】`,
@@ -533,11 +513,13 @@ function openWorkflow() {
   void router.push({ name: 'hermes.workflow' })
 }
 
-function openKanban() {
-  void router.push({ name: 'hermes.kanban', query: { board: BOARD } })
-}
-
-onMounted(() => void loadOverview())
+onMounted(() => {
+  if ((props.createRequest || 0) > 0) createVisible.value = true
+  void loadOverview()
+})
+watch(() => props.createRequest, (next, previous) => {
+  if (next && next !== previous) createVisible.value = true
+})
 onBeforeUnmount(() => {
   if (scrollFrame) cancelAnimationFrame(scrollFrame)
   if (runClock) clearInterval(runClock)
@@ -590,8 +572,8 @@ onBeforeUnmount(() => {
             <span>{{ t('cyberDefense.metrics.toolCalls') }}</span>
           </div>
           <div class="metric-card">
-            <strong>{{ skillUsage?.summary.total_skill_loads || 0 }}</strong>
-            <span>{{ t('cyberDefense.metrics.skillLoads') }}</span>
+            <strong>{{ completedTaskCount }}</strong>
+            <span>{{ t('cyberDefense.metrics.completedTasks') }}</span>
           </div>
           <div class="metric-card">
             <strong>{{ activeTaskCount }}<small>/{{ stats.total }}</small></strong>
@@ -611,10 +593,13 @@ onBeforeUnmount(() => {
               <h3>{{ t('cyberDefense.taskModule') }}</h3>
               <span>{{ filteredTasks.length }} {{ t('cyberDefense.items') }}</span>
             </div>
-            <NSelect v-model:value="taskFilter" size="tiny" :options="[
-              { label: t('cyberDefense.activeOnly'), value: 'active' },
-              { label: t('cyberDefense.allTasks'), value: 'all' },
-            ]" />
+            <div class="task-rail-actions">
+              <NButton size="tiny" type="primary" @click="createVisible = true">＋ {{ t('cyberDefense.newTask') }}</NButton>
+              <NSelect v-model:value="taskFilter" size="tiny" :options="[
+                { label: t('cyberDefense.activeOnly'), value: 'active' },
+                { label: t('cyberDefense.allTasks'), value: 'all' },
+              ]" />
+            </div>
           </div>
           <div v-if="filteredTasks.length" class="task-list">
             <button
@@ -649,11 +634,9 @@ onBeforeUnmount(() => {
                   <h3>{{ selectedTask.title }}</h3>
                   <div class="tag-row">
                     <NTag size="small" :type="statusType(selectedTask.status)">{{ statusLabel(selectedTask.status) }}</NTag>
-                    <NTag v-for="skill in selectedTask.skills || []" :key="skill" size="small">{{ skill }}</NTag>
                   </div>
                 </div>
                 <div class="task-actions">
-                  <NButton size="small" quaternary @click="openKanban">{{ t('cyberDefense.openKanban') }}</NButton>
                   <NButton v-if="selectedTask.status !== 'done'" size="small" @click="markDone">{{ t('cyberDefense.markDone') }}</NButton>
                 </div>
               </div>
@@ -694,14 +677,14 @@ onBeforeUnmount(() => {
                   </div>
                   <details v-if="liveReasoning" class="reasoning-panel live-reasoning" open>
                     <summary>{{ t('cyberDefense.reasoningProcess') }}</summary>
-                    <div>{{ liveReasoning }}<span class="stream-caret" /></div>
+                    <div>{{ brandSafeText(liveReasoning) }}<span class="stream-caret" /></div>
                   </details>
                   <div v-if="liveTools.length" class="live-tools">
                     <span v-for="(tool, index) in liveTools" :key="`${tool.name}-${index}`" :class="tool.status">
                       {{ tool.status === 'running' ? '◌' : tool.status === 'done' ? '✓' : '!' }} {{ tool.name }}
                     </span>
                   </div>
-                  <div v-if="liveAnswer" class="message-bubble live-answer">{{ liveAnswer }}<span class="stream-caret" /></div>
+                  <div v-if="liveAnswer" class="message-bubble live-answer">{{ brandSafeText(liveAnswer) }}<span class="stream-caret" /></div>
                   <div v-else class="running-note"><span /><span /><span />{{ t('cyberDefense.processingHint') }}</div>
                 </div>
               </div>
@@ -730,23 +713,6 @@ onBeforeUnmount(() => {
         </main>
 
         <aside class="resource-panel">
-          <section>
-            <div class="resource-heading">
-              <div>
-                <h3>{{ t('cyberDefense.ctfSkills') }}</h3>
-                <span>{{ ctfSkills.length }} {{ t('cyberDefense.enabled') }}</span>
-              </div>
-              <NButton text size="tiny" @click="router.push({ name: 'hermes.skills' })">{{ t('cyberDefense.manage') }}</NButton>
-            </div>
-            <div v-if="ctfSkills.length" class="skill-list">
-              <div v-for="skill in ctfSkills" :key="skill.name" class="skill-row">
-                <strong>{{ skill.name }}</strong>
-                <span>{{ skill.description }}</span>
-              </div>
-            </div>
-            <NEmpty v-else size="small" :description="t('cyberDefense.noCtfSkills')" />
-          </section>
-
           <section>
             <div class="resource-heading">
               <div>
@@ -788,10 +754,6 @@ onBeforeUnmount(() => {
         <label class="full">
           <span>{{ t('cyberDefense.taskGoal') }}</span>
           <NInput v-model:value="form.body" type="textarea" :rows="6" :placeholder="t('cyberDefense.taskGoalPlaceholder')" />
-        </label>
-        <label class="full">
-          <span>{{ t('cyberDefense.bindSkills') }}</span>
-          <NSelect v-model:value="form.skills" multiple filterable :options="skillOptions" :placeholder="t('cyberDefense.bindSkillsPlaceholder')" />
         </label>
         <NCheckbox v-model:checked="form.authorized" class="full authorization-check">
           {{ t('cyberDefense.authorizationConfirm') }}
@@ -848,8 +810,7 @@ onBeforeUnmount(() => {
   .task-main { background: #0b1b2a; }
 
   .task-row,
-  .workflow-list button,
-  .skill-row { border-color: #203b51; background: #0d2233; }
+  .workflow-list button { border-color: #203b51; background: #0d2233; }
 
   .task-row:hover,
   .workflow-list button:hover { border-color: #345c76; background: #112b40; }
@@ -977,10 +938,12 @@ onBeforeUnmount(() => {
 .resource-panel { border-left: 1px solid $border-light; }
 .resource-panel section + section { margin-top: 22px; }
 .section-toolbar :deep(.n-select) { width: 105px; }
+.task-rail .section-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; }
+.task-rail-actions { width: 100%; display: flex; align-items: center; gap: 7px; }
+.task-rail-actions :deep(.n-select) { width: auto; flex: 1; }
 .chat-toolbar :deep(.n-select) { width: 150px; }
 
 .task-list,
-.skill-list,
 .workflow-list {
   display: flex;
   flex-direction: column;
@@ -1150,26 +1113,6 @@ onBeforeUnmount(() => {
 
 .composer-footer { justify-content: space-between; margin-top: 8px; }
 .composer-footer span { color: $text-muted; font-size: 10px; }
-
-.skill-row {
-  padding: 9px 10px;
-  border: 1px solid $border-light;
-  border-radius: $radius-sm;
-  background: $bg-card;
-
-  strong { display: block; font-family: $font-code; font-size: 11px; }
-  span {
-    display: block;
-    margin-top: 4px;
-    color: $text-muted;
-    font-size: 10px;
-    line-height: 1.4;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-}
 
 .workflow-list button {
   strong { display: block; font-size: 12px; }

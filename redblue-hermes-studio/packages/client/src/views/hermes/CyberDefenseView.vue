@@ -7,7 +7,6 @@ import { runCyberDefenseChat } from '@/api/hermes/cyber-defense'
 import { fetchConversationSummaries, type ConversationSummary } from '@/api/hermes/conversations'
 import { getTask, listBoards, listTasks, type KanbanTask, type KanbanTaskDetail } from '@/api/hermes/kanban'
 import { fetchSession, type HermesMessage, type SessionDetail } from '@/api/hermes/sessions'
-import { fetchSkills, fetchSkillUsageStats, type SkillInfo, type SkillUsageStats } from '@/api/hermes/skills'
 import { createWorkflow, listWorkflows, type WorkflowRecord } from '@/api/hermes/workflows'
 import CyberTaskWorkspace from '@/components/hermes/cyber-defense/CyberTaskWorkspace.vue'
 import CyberAgentStudio from '@/components/hermes/cyber-defense/CyberAgentStudio.vue'
@@ -28,10 +27,9 @@ const router = useRouter()
 const toast = useMessage()
 
 const activeView = ref<ViewName>('overview')
+const taskCreateRequest = ref(0)
 const loading = ref(true)
 const conversations = ref<ConversationSummary[]>([])
-const skillUsage = ref<SkillUsageStats | null>(null)
-const skills = ref<SkillInfo[]>([])
 const workflows = ref<WorkflowRecord[]>([])
 const tasks = ref<KanbanTask[]>([])
 const selectedTaskId = ref<string | null>(null)
@@ -54,8 +52,8 @@ const navItems: Array<{ id: ViewName; label: string; icon: string }> = [
 ]
 
 const viewMeta: Record<ViewName, { eyebrow: string; title: string; subtitle: string }> = {
-  overview: { eyebrow: 'SECURITY OPERATIONS', title: '红蓝队安全运营态势', subtitle: '实时问答、授权任务、技能调用与智能体运行状态' },
-  tasks: { eyebrow: 'SECURITY TASK WORKSPACE', title: '红蓝队任务与协作会话', subtitle: '创建授权任务，编排 CTF Skills，并保存可追溯问答' },
+  overview: { eyebrow: 'SECURITY OPERATIONS', title: '红蓝队安全运营态势', subtitle: '实时问答、授权任务与智能体运行状态' },
+  tasks: { eyebrow: 'SECURITY TASK WORKSPACE', title: '红蓝队任务与协作会话', subtitle: '在任务中心完成创建、研判、问答与结果沉淀' },
   agents: { eyebrow: 'AGENT WORKFLOW STUDIO', title: '红蓝队智能体编排', subtitle: '拖动节点、建立连接、编辑配置并调用真实安全分析会话' },
   chain: { eyebrow: 'EVIDENCE-BACKED PATH', title: '攻击链与证据分析', subtitle: '只根据当前任务的真实消息、工具调用和执行记录生成视图' },
   report: { eyebrow: 'INCIDENT REPORT', title: '红蓝队事件报告', subtitle: '汇总真实任务、会话、智能体结果与证据引用' },
@@ -131,17 +129,13 @@ async function loadTaskDetail() {
 async function loadData(showSpinner = true) {
   if (showSpinner) loading.value = true
   try {
-    const [summaryRows, skillData, usage, workflowRows, boards] = await Promise.all([
+    const [summaryRows, workflowRows, boards] = await Promise.all([
       fetchConversationSummaries({ humanOnly: true, limit: 1000 }),
-      fetchSkills(getActiveProfileName() || undefined),
-      fetchSkillUsageStats(periodDays.value),
       listWorkflows(getActiveProfileName()),
       listBoards({ includeArchived: false }),
     ])
     conversations.value = summaryRows
-    skillUsage.value = usage
     workflows.value = workflowRows
-    skills.value = skillData.categories.flatMap(category => category.skills).filter(skill => skill.enabled !== false)
     if (boards.some(board => board.slug === BOARD)) {
       tasks.value = await listTasks({ board: BOARD, includeArchived: true })
       if (!selectedTaskId.value || !tasks.value.some(task => task.id === selectedTaskId.value)) {
@@ -162,6 +156,11 @@ async function loadData(showSpinner = true) {
 async function switchView(view: ViewName) {
   activeView.value = view
   if (view !== 'tasks') await loadData(false)
+}
+
+function openTaskCreator() {
+  taskCreateRequest.value += 1
+  activeView.value = 'tasks'
 }
 
 async function selectTask(id: string) {
@@ -202,7 +201,7 @@ async function runAgent(agent: CyberStudioAgent) {
   }
   selectedAgentId.value = agent.id
   agentStatuses.value = { ...agentStatuses.value, [agent.id]: 'running' }
-  addTrace(agent.name, '开始执行', `任务：${currentTask.value.title}；Skills：${agent.skills.join(', ') || '由安全智能体自主选择'}`, 'info')
+  addTrace(agent.name, '开始执行', `任务：${currentTask.value.title}；已载入该智能体的编排配置`, 'info')
   try {
     const response = await runCyberDefenseChat({
       session_id: `cyber-agent-${agent.id}-${currentTask.value.id}`,
@@ -265,7 +264,7 @@ function exportReport() {
     evidence: evidenceRows.value, tools: sessionToolNames.value,
     agents: agents.value.map(agent => ({
       id: agent.id, name: agent.name, group: agent.group, status: agentStatuses.value[agent.id] || 'idle',
-      skills: agent.skills, result: agentResults.value[agent.id] || null,
+      result: agentResults.value[agent.id] || null,
     })),
     authorization: { confirmed: authorizedTask.value, rule: '仅限授权任务；生产变更需要人工审批' },
   }
@@ -296,7 +295,7 @@ onMounted(() => {
     <section class="module-content">
       <header class="module-topbar">
         <div><small>{{ activeMeta.eyebrow }}</small><h1>{{ activeMeta.title }}</h1><p>{{ activeMeta.subtitle }}</p></div>
-        <div class="top-actions"><NButton size="small" secondary @click="loadData()">刷新真实数据</NButton><NButton v-if="activeView !== 'tasks'" size="small" type="primary" @click="switchView('tasks')">＋ 新建 / 选择任务</NButton></div>
+        <div class="top-actions"><NButton size="small" secondary @click="loadData()">刷新真实数据</NButton><NButton v-if="activeView !== 'tasks'" size="small" type="primary" @click="openTaskCreator">＋ 新建任务</NButton></div>
       </header>
 
       <NSpin :show="loading" class="module-body">
@@ -305,7 +304,7 @@ onMounted(() => {
             <article><small>近 {{ periodDays }} 天问答会话</small><b>{{ periodConversations.length }}</b><p>最多读取 1,000 个真人会话</p></article>
             <article><small>问答消息</small><b>{{ qaMessages }}</b><p>任务会话真实消息数</p></article>
             <article><small>工具调用</small><b>{{ toolCalls }}</b><p>会话汇总口径</p></article>
-            <article><small>Skill 加载</small><b>{{ skillUsage?.summary.total_skill_loads || 0 }}</b><p>{{ skillUsage?.summary.distinct_skills_used || 0 }} 个不同 Skills</p></article>
+            <article><small>智能体执行</small><b>{{ completedAgents }}</b><p>本次任务已完成运行</p></article>
             <article><small>授权安全任务</small><b>{{ activeTasks.length }}<i>/{{ tasks.length }}</i></b><p>进行中 / 全部</p></article>
             <article><small>智能体编排</small><b>{{ agents.length }}</b><p>{{ redAgents.length }} 红队 · {{ blueAgents.length }} 蓝队</p></article>
           </div>
@@ -318,7 +317,7 @@ onMounted(() => {
                 <div class="task-facts"><span>状态 <b>{{ currentTask.status }}</b></span><span>优先级 <b>P{{ currentTask.priority }}</b></span><span>会话 <b>{{ sessionDetail?.message_count || 0 }} 条消息</b></span></div>
                 <NButton type="primary" @click="switchView('tasks')">进入任务问答</NButton>
               </template>
-              <NEmpty v-else description="还没有真实红蓝队任务"><template #extra><NButton @click="switchView('tasks')">创建任务</NButton></template></NEmpty>
+              <NEmpty v-else description="还没有真实红蓝队任务"><template #extra><NButton @click="openTaskCreator">创建任务</NButton></template></NEmpty>
             </section>
 
             <section class="dark-panel task-queue-panel">
@@ -340,10 +339,10 @@ onMounted(() => {
           </div>
         </template>
 
-        <CyberTaskWorkspace v-else-if="activeView === 'tasks'" embedded />
+        <CyberTaskWorkspace v-else-if="activeView === 'tasks'" embedded :create-request="taskCreateRequest" />
 
         <CyberAgentStudio
-          v-else-if="activeView === 'agents'" :agents="agents" :edges="edges" :skills="skills"
+          v-else-if="activeView === 'agents'" :agents="agents" :edges="edges"
           :selected-id="selectedAgentId" :statuses="agentStatuses" :results="agentResults"
           @select="selectedAgentId = $event" @run="runAgent" @save="saveAgent" @create="createAgent"
           @positions="setAgentPositions" @edges="setEdges" @sync="syncWorkflow"
@@ -366,7 +365,7 @@ onMounted(() => {
           <div class="report-metrics"><article><span>01</span><h3>红队验证</h3><b>{{ redAgents.filter(agent => agentStatuses[agent.id] === 'completed').length }}/{{ redAgents.length }}</b><p>已完成真实运行的红队智能体</p></article><article><span>02</span><h3>蓝队研判</h3><b>{{ blueAgents.filter(agent => agentStatuses[agent.id] === 'completed').length }}/{{ blueAgents.length }}</b><p>已完成真实运行的蓝队智能体</p></article><article><span>03</span><h3>会话证据</h3><b>{{ evidenceRows.length }}</b><p>{{ sessionToolNames.length }} 个实际工具名称</p></article></div>
           <section class="dark-panel validation-panel">
             <header class="panel-title"><div><small>RED TEAM VALIDATION</small><h2>红队验证明细</h2></div><span>不展示固定置信度或预设结论</span></header>
-            <div class="validation-list"><article v-for="agent in redAgents" :key="agent.id"><header><div><small>{{ agent.role }}</small><h3>{{ agent.name }}</h3></div><NTag :type="agentStatuses[agent.id] === 'completed' ? 'success' : agentStatuses[agent.id] === 'failed' ? 'error' : 'default'" size="small">{{ agentStatuses[agent.id] || 'idle' }}</NTag></header><p>{{ agentResults[agent.id] || '尚未产生真实运行结果。' }}</p><footer><span v-for="skill in agent.skills" :key="skill">{{ skill }}</span></footer></article></div>
+            <div class="validation-list"><article v-for="agent in redAgents" :key="agent.id"><header><div><small>{{ agent.role }}</small><h3>{{ agent.name }}</h3></div><NTag :type="agentStatuses[agent.id] === 'completed' ? 'success' : agentStatuses[agent.id] === 'failed' ? 'error' : 'default'" size="small">{{ agentStatuses[agent.id] || 'idle' }}</NTag></header><p>{{ agentResults[agent.id] || '尚未产生真实运行结果。' }}</p></article></div>
           </section>
         </template>
       </NSpin>

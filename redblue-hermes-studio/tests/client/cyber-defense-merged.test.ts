@@ -44,4 +44,17 @@ describe('merged RedBlue Hermes studio', () => {
     expect(router).toContain("path: '/security-operations'")
     expect(template).not.toContain('Hermes')
   })
+
+  it('keeps capability internals off the UI and creates tasks inside the task center', () => {
+    const workspace = readFileSync('packages/client/src/components/hermes/cyber-defense/CyberTaskWorkspace.vue', 'utf8')
+    const agentStudio = readFileSync('packages/client/src/components/hermes/cyber-defense/CyberAgentStudio.vue', 'utf8')
+    const view = readFileSync('packages/client/src/views/hermes/CyberDefenseView.vue', 'utf8')
+
+    expect(workspace).not.toContain('ctfSkills')
+    expect(workspace).not.toContain('bindSkills')
+    expect(workspace).not.toContain("name: 'hermes.kanban'")
+    expect(agentStudio).not.toContain('skillOptions')
+    expect(view).toContain('function openTaskCreator()')
+    expect(view).toContain(':create-request="taskCreateRequest"')
+  })
 })
