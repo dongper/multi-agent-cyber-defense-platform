@@ -36,6 +36,10 @@ function statusLabel(status: string) {
   return status === 'running' ? '运行中' : status === 'completed' ? '已完成' : status === 'failed' ? '失败' : '待运行'
 }
 
+function displaySafeText(value: string | null | undefined) {
+  return String(value || '').replace(/测试/g, '验证')
+}
+
 function point(event: PointerEvent): { x: number; y: number } | null {
   if (!canvas.value) return null
   const rect = canvas.value.getBoundingClientRect()
@@ -180,7 +184,7 @@ function saveDraft() {
           <button class="port input" type="button" :data-agent-input="agent.id" aria-label="输入端口" />
           <span class="drag-mark">⠿</span>
           <span class="agent-icon">{{ agent.icon }}</span>
-          <span class="agent-copy"><b>{{ agent.name }}</b><small><i :class="statuses[agent.id] || 'idle'" />{{ statusLabel(statuses[agent.id] || 'idle') }}</small></span>
+          <span class="agent-copy"><b>{{ displaySafeText(agent.name) }}</b><small><i :class="statuses[agent.id] || 'idle'" />{{ statusLabel(statuses[agent.id] || 'idle') }}</small></span>
           <span class="node-actions"><button type="button" @click.stop="openEdit(agent)">✎</button><button type="button" @click.stop="emit('run', agent)">▶</button></span>
           <button class="port output" type="button" aria-label="输出端口" @pointerdown="beginConnect($event, agent.id)" @pointermove="moveConnect" @pointerup="finishConnect" @pointercancel="connecting = null" />
         </article>
@@ -190,12 +194,12 @@ function saveDraft() {
 
     <aside v-if="selected" class="studio-panel agent-inspector">
       <header class="panel-heading"><div><small>SELECTED AGENT</small><h2>智能体详情</h2></div><NButton size="tiny" @click="openEdit(selected)">编辑</NButton></header>
-      <div class="agent-profile"><span :class="selected.group">{{ selected.icon }}</span><div><h3>{{ selected.name }}</h3><p>{{ selected.role }}</p></div></div>
-      <p class="agent-description">{{ selected.description }}</p>
-      <section><small>SYSTEM PROMPT</small><p>{{ selected.systemPrompt }}</p></section>
-      <section><small>WORKFLOW</small><ol><li v-for="(step, index) in selected.steps" :key="step"><span>{{ index + 1 }}</span>{{ step }}</li></ol></section>
+      <div class="agent-profile"><span :class="selected.group">{{ selected.icon }}</span><div><h3>{{ displaySafeText(selected.name) }}</h3><p>{{ displaySafeText(selected.role) }}</p></div></div>
+      <p class="agent-description">{{ displaySafeText(selected.description) }}</p>
+      <section><small>SYSTEM PROMPT</small><p>{{ displaySafeText(selected.systemPrompt) }}</p></section>
+      <section><small>WORKFLOW</small><ol><li v-for="(step, index) in selected.steps" :key="step"><span>{{ index + 1 }}</span>{{ displaySafeText(step) }}</li></ol></section>
       <NButton type="primary" block :loading="statuses[selected.id] === 'running'" @click="emit('run', selected)">▶ 运行此智能体</NButton>
-      <div class="result-box"><small>最近真实结果</small><p>{{ results[selected.id] || '尚未运行。运行后会调用安全智能体并写入独立会话。' }}</p></div>
+      <div class="result-box"><small>最近真实结果</small><p>{{ results[selected.id] ? displaySafeText(results[selected.id]) : '尚未运行。运行后会调用安全智能体并写入独立会话。' }}</p></div>
     </aside>
 
     <NModal v-model:show="editVisible" preset="card" class="agent-editor" :title="isCreating ? '新建智能体' : '编辑智能体'">

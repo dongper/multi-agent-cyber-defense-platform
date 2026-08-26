@@ -32,6 +32,8 @@ describe('merged RedBlue Hermes studio', () => {
   it('uses a cancellable live stream for task conversations', () => {
     const source = readFileSync('packages/client/src/components/hermes/cyber-defense/CyberTaskWorkspace.vue', 'utf8')
     expect(source).toContain('startRunViaSocket')
+    expect(source).toContain('model: activeModel.value?.model')
+    expect(source).toContain('provider: activeModel.value?.provider')
     expect(source).toContain('function stopRun()')
     expect(source).toContain('reasoning-panel')
     expect(source).not.toContain('await runCyberDefenseChat')
@@ -56,5 +58,30 @@ describe('merged RedBlue Hermes studio', () => {
     expect(agentStudio).not.toContain('skillOptions')
     expect(view).toContain('function openTaskCreator()')
     expect(view).toContain(':create-request="taskCreateRequest"')
+  })
+
+  it('ships a sanitized historical validation report in the incident report view', () => {
+    const report = readFileSync('packages/client/public/reports/robot-waf-practice-sanitized.html', 'utf8')
+    const view = readFileSync('packages/client/src/views/hermes/CyberDefenseView.vue', 'utf8')
+
+    expect(report).toContain('2026-08-25')
+    expect(report).toContain('security-lab.example.internal')
+    expect(report).toContain('原始截图已脱敏移除')
+    expect(report).not.toMatch(/unicomsign|bjunicom|13800138000|AQqfncs|data:image/i)
+    expect(report).not.toContain('测试')
+    expect(view).toContain('robot-waf-practice-sanitized.html')
+    expect(view).toContain('历史授权验证报告')
+  })
+
+  it('normalizes legacy test wording before rendering it in the product UI', () => {
+    const workspace = readFileSync('packages/client/src/components/hermes/cyber-defense/CyberTaskWorkspace.vue', 'utf8')
+    const view = readFileSync('packages/client/src/views/hermes/CyberDefenseView.vue', 'utf8')
+    const workspaceTemplate = workspace.slice(workspace.indexOf('<template>'), workspace.lastIndexOf('</template>'))
+    const viewTemplate = view.slice(view.indexOf('<template>'), view.lastIndexOf('</template>'))
+
+    expect(workspace).toContain(".replace(/测试/g, '验证')")
+    expect(view).toContain(".replace(/测试/g, '验证')")
+    expect(workspaceTemplate).not.toContain('测试')
+    expect(viewTemplate).not.toContain('测试')
   })
 })

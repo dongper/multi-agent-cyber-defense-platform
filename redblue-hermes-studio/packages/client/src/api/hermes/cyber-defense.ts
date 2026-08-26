@@ -4,6 +4,8 @@ export interface CyberDefenseChatRunRequest {
   input: string
   session_id: string
   profile?: string
+  model?: string
+  provider?: string
   timeout_ms?: number
 }
 

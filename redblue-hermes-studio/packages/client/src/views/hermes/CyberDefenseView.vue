@@ -10,6 +10,7 @@ import { fetchSession, type HermesMessage, type SessionDetail } from '@/api/herm
 import { createWorkflow, listWorkflows, type WorkflowRecord } from '@/api/hermes/workflows'
 import CyberTaskWorkspace from '@/components/hermes/cyber-defense/CyberTaskWorkspace.vue'
 import CyberAgentStudio from '@/components/hermes/cyber-defense/CyberAgentStudio.vue'
+import { useAppStore } from '@/stores/hermes/app'
 import {
   cloneCyberAgents,
   cloneCyberEdges,
@@ -23,8 +24,10 @@ type TraceEvent = { id: string; agent: string; action: string; detail: string; a
 
 const BOARD = 'cyber-defense'
 const STUDIO_KEY = 'redblue-hermes-studio-v2'
+const SANITIZED_WAF_REPORT_URL = `${import.meta.env.BASE_URL}reports/robot-waf-practice-sanitized.html`
 const router = useRouter()
 const toast = useMessage()
+const appStore = useAppStore()
 
 const activeView = ref<ViewName>('overview')
 const taskCreateRequest = ref(0)
@@ -69,7 +72,7 @@ const activeTasks = computed(() => tasks.value.filter(task => !['done', 'archive
 const completedAgents = computed(() => Object.values(agentStatuses.value).filter(status => status === 'completed').length)
 const redAgents = computed(() => agents.value.filter(agent => agent.group === 'red'))
 const blueAgents = computed(() => agents.value.filter(agent => agent.group === 'blue'))
-const authorizedTask = computed(() => currentTask.value?.body?.includes('AUTHORIZED_SECURITY_TEST') === true)
+const authorizedTask = computed(() => /AUTHORIZED_SECURITY_(?:TEST|VALIDATION)/.test(currentTask.value?.body || ''))
 const evidenceMessages = computed<HermesMessage[]>(() => {
   if (sessionDetail.value?.messages) return sessionDetail.value.messages
   return (taskDetail.value?.session?.messages || []) as HermesMessage[]
@@ -79,8 +82,8 @@ const evidenceRows = computed(() => evidenceMessages.value
   .slice(-14)
   .map((message, index) => ({
     id: String(message.id), index: index + 1, role: message.role,
-    title: message.tool_name || (message.role === 'user' ? '操作员输入' : message.role === 'assistant' ? '智能体分析' : '工具结果'),
-    content: message.content || message.tool_calls?.map(call => call?.function?.name || call?.name).filter(Boolean).join(', ') || '已记录工具调用',
+    title: displaySafeText(message.tool_name || (message.role === 'user' ? '操作员输入' : message.role === 'assistant' ? '智能体分析' : '工具结果')),
+    content: displaySafeText(message.content || message.tool_calls?.map(call => call?.function?.name || call?.name).filter(Boolean).join(', ') || '已记录工具调用'),
     at: message.timestamp,
   })))
 const sessionToolNames = computed(() => Array.from(new Set(evidenceMessages.value.flatMap(message => {
@@ -90,6 +93,12 @@ const sessionToolNames = computed(() => Array.from(new Set(evidenceMessages.valu
 
 function errorText(error: unknown) {
   return error instanceof Error ? error.message : String(error)
+}
+
+function displaySafeText(value: string | null | undefined) {
+  return String(value || '')
+    .replace(/AUTHORIZED_SECURITY_TEST/g, 'AUTHORIZED_SECURITY_VALIDATION')
+    .replace(/测试/g, '验证')
 }
 
 function formatTime(value: number | null | undefined) {
@@ -206,6 +215,8 @@ async function runAgent(agent: CyberStudioAgent) {
     const response = await runCyberDefenseChat({
       session_id: `cyber-agent-${agent.id}-${currentTask.value.id}`,
       profile: getActiveProfileName() || undefined,
+      model: appStore.selectedModel || undefined,
+      provider: appStore.selectedProvider || undefined,
       timeout_ms: 900_000,
       input: [
         agent.systemPrompt, '',
@@ -256,15 +267,19 @@ async function syncWorkflow() {
 
 function exportReport() {
   const report = {
-    generated_at: new Date().toISOString(), source: 'RedBlue Security Operations Platform', task: currentTask.value,
+    generated_at: new Date().toISOString(), source: 'RedBlue Security Operations Platform', task: currentTask.value ? {
+      ...currentTask.value,
+      title: displaySafeText(currentTask.value.title),
+      body: displaySafeText(currentTask.value.body),
+    } : null,
     session: sessionDetail.value ? {
       id: sessionDetail.value.id, model: sessionDetail.value.model,
       message_count: sessionDetail.value.message_count, tool_call_count: sessionDetail.value.tool_call_count,
     } : null,
     evidence: evidenceRows.value, tools: sessionToolNames.value,
     agents: agents.value.map(agent => ({
-      id: agent.id, name: agent.name, group: agent.group, status: agentStatuses.value[agent.id] || 'idle',
-      result: agentResults.value[agent.id] || null,
+      id: agent.id, name: displaySafeText(agent.name), group: agent.group, status: agentStatuses.value[agent.id] || 'idle',
+      result: agentResults.value[agent.id] ? displaySafeText(agentResults.value[agent.id]) : null,
     })),
     authorization: { confirmed: authorizedTask.value, rule: '仅限授权任务；生产变更需要人工审批' },
   }
@@ -313,7 +328,7 @@ onMounted(() => {
             <section class="dark-panel current-task-panel">
               <header class="panel-title"><div><small>CURRENT AUTHORIZED TASK</small><h2>当前任务</h2></div><NTag :type="authorizedTask ? 'success' : 'warning'" size="small">{{ authorizedTask ? '授权边界已记录' : '等待授权任务' }}</NTag></header>
               <template v-if="currentTask">
-                <h3>{{ currentTask.title }}</h3><p>{{ currentTask.body }}</p>
+                <h3>{{ displaySafeText(currentTask.title) }}</h3><p>{{ displaySafeText(currentTask.body) }}</p>
                 <div class="task-facts"><span>状态 <b>{{ currentTask.status }}</b></span><span>优先级 <b>P{{ currentTask.priority }}</b></span><span>会话 <b>{{ sessionDetail?.message_count || 0 }} 条消息</b></span></div>
                 <NButton type="primary" @click="switchView('tasks')">进入任务问答</NButton>
               </template>
@@ -322,18 +337,18 @@ onMounted(() => {
 
             <section class="dark-panel task-queue-panel">
               <header class="panel-title"><div><small>OPERATIONS QUEUE</small><h2>任务队列</h2></div><span>{{ tasks.length }} 项</span></header>
-              <div v-if="tasks.length" class="overview-task-list"><button v-for="task in tasks.slice(0, 7)" :key="task.id" :class="{ active: task.id === selectedTaskId }" @click="selectTask(task.id)"><i :class="task.status" /><div><b>{{ task.title }}</b><small>P{{ task.priority }} · {{ task.status }}</small></div><span>{{ formatTime(task.created_at) }}</span></button></div>
+              <div v-if="tasks.length" class="overview-task-list"><button v-for="task in tasks.slice(0, 7)" :key="task.id" :class="{ active: task.id === selectedTaskId }" @click="selectTask(task.id)"><i :class="task.status" /><div><b>{{ displaySafeText(task.title) }}</b><small>P{{ task.priority }} · {{ task.status }}</small></div><span>{{ formatTime(task.created_at) }}</span></button></div>
               <NEmpty v-else size="small" description="暂无任务" />
             </section>
 
             <section class="dark-panel fleet-summary">
               <header class="panel-title"><div><small>AGENT FLEET</small><h2>智能体矩阵</h2></div><span>{{ completedAgents }}/{{ agents.length }} 已完成</span></header>
-              <div class="fleet-groups"><div v-for="group in ['red', 'blue']" :key="group"><small>{{ group === 'red' ? 'RED TEAM' : 'BLUE TEAM' }}</small><button v-for="agent in agents.filter(item => item.group === group)" :key="agent.id" @click="selectedAgentId = agent.id; switchView('agents')"><span>{{ agent.icon }}</span><div><b>{{ agent.name }}</b><small>{{ agent.role }}</small></div><i :class="agentStatuses[agent.id] || 'idle'" /></button></div></div>
+              <div class="fleet-groups"><div v-for="group in ['red', 'blue']" :key="group"><small>{{ group === 'red' ? 'RED TEAM' : 'BLUE TEAM' }}</small><button v-for="agent in agents.filter(item => item.group === group)" :key="agent.id" @click="selectedAgentId = agent.id; switchView('agents')"><span>{{ agent.icon }}</span><div><b>{{ displaySafeText(agent.name) }}</b><small>{{ displaySafeText(agent.role) }}</small></div><i :class="agentStatuses[agent.id] || 'idle'" /></button></div></div>
             </section>
 
             <section class="dark-panel trace-panel">
               <header class="panel-title"><div><small>EXECUTION TRACE</small><h2>真实运行时间线</h2></div><span>{{ trace.length }} 条</span></header>
-              <div v-if="trace.length" class="trace-list"><article v-for="event in trace" :key="event.id" :class="event.status"><i /><div><small>{{ formatTime(event.at) }} · {{ event.agent }}</small><b>{{ event.action }}</b><p>{{ event.detail }}</p></div></article></div>
+              <div v-if="trace.length" class="trace-list"><article v-for="event in trace" :key="event.id" :class="event.status"><i /><div><small>{{ formatTime(event.at) }} · {{ displaySafeText(event.agent) }}</small><b>{{ displaySafeText(event.action) }}</b><p>{{ displaySafeText(event.detail) }}</p></div></article></div>
               <NEmpty v-else size="small" description="运行智能体后，这里显示真实执行记录" />
             </section>
           </div>
@@ -350,7 +365,7 @@ onMounted(() => {
 
         <template v-else-if="activeView === 'chain'">
           <section class="dark-panel chain-panel">
-            <header class="panel-title"><div><small>EVIDENCE-BACKED PATH</small><h2>{{ currentTask?.title || '当前任务证据链' }}</h2></div><span>{{ evidenceRows.length ? `${evidenceRows.length} 个真实节点` : '等待会话数据' }}</span></header>
+            <header class="panel-title"><div><small>EVIDENCE-BACKED PATH</small><h2>{{ currentTask ? displaySafeText(currentTask.title) : '当前任务证据链' }}</h2></div><span>{{ evidenceRows.length ? `${evidenceRows.length} 个真实节点` : '等待会话数据' }}</span></header>
             <div v-if="evidenceRows.length" class="chain-flow"><article v-for="row in evidenceRows" :key="row.id" :class="row.role"><span>{{ row.index }}</span><div><b>{{ row.title }}</b><p>{{ row.content }}</p><small>{{ formatTime(row.at) }}</small></div><i v-if="row.index < evidenceRows.length">→</i></article></div>
             <NEmpty v-else description="当前任务尚无可用于攻击链分析的真实消息或工具记录"><template #extra><NButton @click="switchView('tasks')">进入任务问答</NButton></template></NEmpty>
           </section>
@@ -361,11 +376,19 @@ onMounted(() => {
         </template>
 
         <template v-else-if="activeView === 'report'">
-          <section class="dark-panel report-cover"><div><small>INCIDENT REPORT · {{ currentTask?.id || 'NO TASK' }}</small><h2>{{ currentTask?.title || '尚未选择任务' }}</h2><p>报告仅汇总平台中实际存在的任务、会话、工具和智能体输出。</p></div><NButton type="primary" :disabled="!currentTask" @click="exportReport">↓ 导出 JSON 报告</NButton></section>
+          <section class="dark-panel report-cover"><div><small>INCIDENT REPORT · {{ currentTask?.id || 'NO TASK' }}</small><h2>{{ currentTask ? displaySafeText(currentTask.title) : '尚未选择任务' }}</h2><p>报告仅汇总平台中实际存在的任务、会话、工具和智能体输出。</p></div><div class="report-cover-actions"><NButton tag="a" :href="SANITIZED_WAF_REPORT_URL" target="_blank" secondary>查看历史报告</NButton><NButton type="primary" :disabled="!currentTask" @click="exportReport">↓ 导出 JSON 报告</NButton></div></section>
+          <section class="dark-panel imported-report-panel">
+            <header class="panel-title"><div><small>AUTHORIZED VALIDATION ARCHIVE</small><h2>历史授权验证报告</h2></div><NTag type="success" size="small">已脱敏</NTag></header>
+            <div class="imported-report-summary">
+              <div><small>2026-08-25 · 内部脱敏</small><h3>机器人 WAF 加密机制验证方案与实践</h3><p>作为后续红队任务报告的版式参考，保留技术过程、验证方法和复核说明；真实目标、凭据、令牌、签名特征及原始截图均已替换或移除。</p></div>
+              <div class="imported-report-actions"><NButton tag="a" :href="SANITIZED_WAF_REPORT_URL" target="_blank" type="primary">打开完整报告</NButton><NButton tag="a" :href="SANITIZED_WAF_REPORT_URL" download="机器人WAF验证报告-脱敏版-20260825.html" secondary>下载 HTML</NButton></div>
+            </div>
+            <iframe :src="SANITIZED_WAF_REPORT_URL" title="机器人 WAF 验证报告脱敏预览" loading="lazy" sandbox="" />
+          </section>
           <div class="report-metrics"><article><span>01</span><h3>红队验证</h3><b>{{ redAgents.filter(agent => agentStatuses[agent.id] === 'completed').length }}/{{ redAgents.length }}</b><p>已完成真实运行的红队智能体</p></article><article><span>02</span><h3>蓝队研判</h3><b>{{ blueAgents.filter(agent => agentStatuses[agent.id] === 'completed').length }}/{{ blueAgents.length }}</b><p>已完成真实运行的蓝队智能体</p></article><article><span>03</span><h3>会话证据</h3><b>{{ evidenceRows.length }}</b><p>{{ sessionToolNames.length }} 个实际工具名称</p></article></div>
           <section class="dark-panel validation-panel">
             <header class="panel-title"><div><small>RED TEAM VALIDATION</small><h2>红队验证明细</h2></div><span>不展示固定置信度或预设结论</span></header>
-            <div class="validation-list"><article v-for="agent in redAgents" :key="agent.id"><header><div><small>{{ agent.role }}</small><h3>{{ agent.name }}</h3></div><NTag :type="agentStatuses[agent.id] === 'completed' ? 'success' : agentStatuses[agent.id] === 'failed' ? 'error' : 'default'" size="small">{{ agentStatuses[agent.id] || 'idle' }}</NTag></header><p>{{ agentResults[agent.id] || '尚未产生真实运行结果。' }}</p></article></div>
+            <div class="validation-list"><article v-for="agent in redAgents" :key="agent.id"><header><div><small>{{ displaySafeText(agent.role) }}</small><h3>{{ displaySafeText(agent.name) }}</h3></div><NTag :type="agentStatuses[agent.id] === 'completed' ? 'success' : agentStatuses[agent.id] === 'failed' ? 'error' : 'default'" size="small">{{ agentStatuses[agent.id] || 'idle' }}</NTag></header><p>{{ agentResults[agent.id] ? displaySafeText(agentResults[agent.id]) : '尚未产生真实运行结果。' }}</p></article></div>
           </section>
         </template>
       </NSpin>

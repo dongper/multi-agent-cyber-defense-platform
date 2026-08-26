@@ -36,12 +36,15 @@ import {
 import { fetchSession } from '@/api/hermes/sessions'
 import { listWorkflows, type WorkflowRecord } from '@/api/hermes/workflows'
 import MarkdownRenderer from '@/components/hermes/chat/MarkdownRenderer.vue'
+import { useAppStore } from '@/stores/hermes/app'
 
 const BOARD = 'cyber-defense'
+const TASK_MODELS_KEY = 'redblue-task-model-selections-v1'
 const props = defineProps<{ embedded?: boolean; createRequest?: number }>()
 const { t, locale } = useI18n()
 const router = useRouter()
 const toast = useMessage()
+const appStore = useAppStore()
 
 const loading = ref(true)
 const taskLoading = ref(false)
@@ -58,6 +61,7 @@ const stats = ref<KanbanStats>({ total: 0, by_status: {}, by_assignee: {} })
 const periodDays = ref(30)
 const taskFilter = ref('active')
 const mode = ref('joint')
+const selectedModelKey = ref('')
 const composer = ref('')
 const chatScroller = ref<HTMLElement | null>(null)
 const liveAnswer = ref('')
@@ -75,8 +79,10 @@ const form = ref({
   body: '',
   scene: 'authorized-lab',
   priority: 2,
+  modelKey: '',
   authorized: false,
 })
+const taskModelSelections = ref<Record<string, string>>({})
 
 const periodOptions = [7, 30, 90]
 const statusOrder = ['running', 'ready', 'todo', 'triage', 'scheduled', 'review', 'blocked', 'done', 'archived']
@@ -98,6 +104,14 @@ const modeOptions = computed(() => [
   { label: t('cyberDefense.modes.red'), value: 'red' },
   { label: t('cyberDefense.modes.blue'), value: 'blue' },
 ])
+const modelSelectionOptions = computed(() => appStore.modelGroups.flatMap(group => group.models.map(model => {
+  const alias = appStore.modelAliases[group.provider]?.[model]
+  return {
+    label: `${group.label || group.provider} · ${alias ? `${alias} (${model})` : model}`,
+    value: JSON.stringify([group.provider, model]),
+  }
+})))
+const activeModel = computed(() => parseModelKey(selectedModelKey.value))
 const selectedTask = computed(() => taskDetail.value?.task || null)
 const filteredTasks = computed(() => taskList.value
   .filter(task => taskFilter.value === 'all' || activeStatuses.has(task.status))
@@ -122,7 +136,7 @@ const workflowAgentCount = computed(() => {
     return node.type === 'agent'
   }).length, 0)
 })
-const canRun = computed(() => selectedTask.value?.body?.includes('AUTHORIZED_SECURITY_TEST') === true)
+const canRun = computed(() => /AUTHORIZED_SECURITY_(?:TEST|VALIDATION)/.test(selectedTask.value?.body || ''))
 
 function taskSessionId(taskId: string): string {
   return `cyber-defense-${taskId}`
@@ -130,6 +144,46 @@ function taskSessionId(taskId: string): string {
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+function parseModelKey(key: string): { provider: string; model: string } | null {
+  try {
+    const value = JSON.parse(key) as unknown
+    if (!Array.isArray(value) || value.length !== 2 || value.some(item => typeof item !== 'string')) return null
+    return { provider: value[0], model: value[1] }
+  } catch {
+    return null
+  }
+}
+
+function modelKey(provider: string | null | undefined, model: string | null | undefined): string {
+  return provider && model ? JSON.stringify([provider, model]) : ''
+}
+
+function findModelKey(provider: string | null | undefined, model: string | null | undefined): string {
+  if (!model) return ''
+  const exact = modelSelectionOptions.value.find(option => option.value === modelKey(provider, model))
+  if (exact) return exact.value
+  return modelSelectionOptions.value.find(option => parseModelKey(option.value)?.model === model)?.value || ''
+}
+
+function persistTaskModelSelections() {
+  localStorage.setItem(TASK_MODELS_KEY, JSON.stringify(taskModelSelections.value))
+}
+
+function restoreTaskModelSelections() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TASK_MODELS_KEY) || '{}') as Record<string, unknown>
+    taskModelSelections.value = Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => typeof entry[1] === 'string'))
+  } catch {
+    taskModelSelections.value = {}
+  }
+}
+
+function ensureModelSelection() {
+  if (modelSelectionOptions.value.some(option => option.value === selectedModelKey.value)) return
+  selectedModelKey.value = findModelKey(appStore.selectedProvider, appStore.selectedModel) || modelSelectionOptions.value[0]?.value || ''
+  if (!form.value.modelKey) form.value.modelKey = selectedModelKey.value
 }
 
 function statusLabel(status: string): string {
@@ -159,6 +213,8 @@ function brandSafeText(value: string | null | undefined, hideCapabilityDetails =
   let text = String(value || '')
     .replace(/Hermes Studio/gi, '红蓝队协同安全运营平台')
     .replace(/Hermes/gi, '安全智能体')
+    .replace(/AUTHORIZED_SECURITY_TEST/g, 'AUTHORIZED_SECURITY_VALIDATION')
+    .replace(/测试/g, '验证')
   if (hideCapabilityDetails) {
     text = text.split('\n').map(line => (
       /CTF\s*技能|ctf-[a-z0-9_-]+/i.test(line)
@@ -189,6 +245,7 @@ function resetForm() {
     body: '',
     scene: 'authorized-lab',
     priority: 2,
+    modelKey: selectedModelKey.value,
     authorized: false,
   }
 }
@@ -235,6 +292,8 @@ async function loadTask(id: string | null): Promise<void> {
   }
   taskLoading.value = true
   try {
+    const savedModel = taskModelSelections.value[id]
+    if (savedModel && modelSelectionOptions.value.some(option => option.value === savedModel)) selectedModelKey.value = savedModel
     taskDetail.value = await getTask(id, { board: BOARD })
     await loadConversation(id)
   } catch (error) {
@@ -247,6 +306,10 @@ async function loadTask(id: string | null): Promise<void> {
 async function loadConversation(taskId: string): Promise<void> {
   const sessionId = taskSessionId(taskId)
   const session = await fetchSession(sessionId, getActiveProfileName() || undefined)
+  if (!taskModelSelections.value[taskId] && session?.model) {
+    const sessionModel = findModelKey(session.provider, session.model)
+    if (sessionModel) selectedModelKey.value = sessionModel
+  }
   if (session?.messages?.length) {
     chatMessages.value = session.messages
       .filter(message => (message.role === 'user' || message.role === 'assistant') && (message.content || message.reasoning))
@@ -397,6 +460,7 @@ async function handleCreateTask() {
   createLoading.value = true
   try {
     await ensureBoard()
+    const createdModelKey = form.value.modelKey || selectedModelKey.value
     const scene = sceneOptions.value.find(item => item.value === form.value.scene)?.label || form.value.scene
     const task = await createTask({
       title,
@@ -405,7 +469,7 @@ async function handleCreateTask() {
         '',
         `## ${t('cyberDefense.executionBoundary')}`,
         `- ${t('cyberDefense.sceneLabel')}: ${scene}`,
-        `- ${t('cyberDefense.authorizationLabel')}: AUTHORIZED_SECURITY_TEST`,
+        `- ${t('cyberDefense.authorizationLabel')}: AUTHORIZED_SECURITY_VALIDATION`,
         `- ${t('cyberDefense.boundaryRule')}`,
       ].join('\n'),
       priority: form.value.priority,
@@ -413,6 +477,11 @@ async function handleCreateTask() {
       skills: [],
       goalMode: true,
     }, { board: BOARD })
+    if (createdModelKey) {
+      taskModelSelections.value = { ...taskModelSelections.value, [task.id]: createdModelKey }
+      persistTaskModelSelections()
+      selectedModelKey.value = createdModelKey
+    }
     createVisible.value = false
     resetForm()
     await loadTaskList()
@@ -467,6 +536,8 @@ function sendMessage() {
       display_input: input,
       session_id: taskSessionId(task.id),
       profile: getActiveProfileName() || undefined,
+      model: activeModel.value?.model || undefined,
+      provider: activeModel.value?.provider || undefined,
       source: 'api_server',
     }, handleRunEvent, () => void settleRun(task.id), (error) => {
       chatLoading.value = false
@@ -514,11 +585,29 @@ function openWorkflow() {
 }
 
 onMounted(() => {
+  restoreTaskModelSelections()
   if ((props.createRequest || 0) > 0) createVisible.value = true
-  void loadOverview()
+  void (async () => {
+    await appStore.loadModels()
+    ensureModelSelection()
+    await loadOverview()
+  })()
 })
 watch(() => props.createRequest, (next, previous) => {
-  if (next && next !== previous) createVisible.value = true
+  if (next && next !== previous) {
+    form.value.modelKey = selectedModelKey.value
+    createVisible.value = true
+  }
+})
+watch(modelSelectionOptions, () => ensureModelSelection())
+watch(selectedModelKey, key => {
+  const selection = parseModelKey(key)
+  if (!selection) return
+  appStore.selectedProvider = selection.provider
+  appStore.selectedModel = selection.model
+  if (!selectedTaskId.value) return
+  taskModelSelections.value = { ...taskModelSelections.value, [selectedTaskId.value]: key }
+  persistTaskModelSelections()
 })
 onBeforeUnmount(() => {
   if (scrollFrame) cancelAnimationFrame(scrollFrame)
@@ -613,8 +702,8 @@ onBeforeUnmount(() => {
                 <NTag size="tiny" :type="statusType(task.status)" :bordered="false">{{ statusLabel(task.status) }}</NTag>
                 <span>P{{ task.priority }}</span>
               </div>
-              <strong>{{ task.title }}</strong>
-              <p>{{ task.body || t('cyberDefense.noDescription') }}</p>
+              <strong>{{ brandSafeText(task.title, false) }}</strong>
+              <p>{{ task.body ? brandSafeText(task.body, false) : t('cyberDefense.noDescription') }}</p>
               <time>{{ formatTime(task.created_at) }}</time>
             </button>
           </div>
@@ -631,7 +720,7 @@ onBeforeUnmount(() => {
               <div class="task-heading">
                 <div>
                   <div class="eyebrow">{{ selectedTask.id }}</div>
-                  <h3>{{ selectedTask.title }}</h3>
+                  <h3>{{ brandSafeText(selectedTask.title, false) }}</h3>
                   <div class="tag-row">
                     <NTag size="small" :type="statusType(selectedTask.status)">{{ statusLabel(selectedTask.status) }}</NTag>
                   </div>
@@ -641,14 +730,25 @@ onBeforeUnmount(() => {
                 </div>
               </div>
 
-              <div class="task-context">{{ selectedTask.body }}</div>
+              <div class="task-context">{{ brandSafeText(selectedTask.body, false) }}</div>
 
               <div class="chat-toolbar">
                 <div>
                   <h3>{{ t('cyberDefense.realQa') }}</h3>
                   <span>{{ t('cyberDefense.sessionPersisted') }}</span>
                 </div>
-                <NSelect v-model:value="mode" size="small" :options="modeOptions" />
+                <div class="chat-controls">
+                  <NSelect v-model:value="mode" size="small" :options="modeOptions" />
+                  <NSelect
+                    v-model:value="selectedModelKey"
+                    size="small"
+                    filterable
+                    :options="modelSelectionOptions"
+                    :loading="appStore.modelGroups.length === 0"
+                    :disabled="modelSelectionOptions.length === 0"
+                    :placeholder="t('cyberDefense.modelPlaceholder')"
+                  />
+                </div>
               </div>
 
               <div ref="chatScroller" class="chat-messages">
@@ -750,6 +850,17 @@ onBeforeUnmount(() => {
         <label>
           <span>{{ t('cyberDefense.priority') }}</span>
           <NSelect v-model:value="form.priority" :options="priorityOptions" />
+        </label>
+        <label>
+          <span>{{ t('cyberDefense.modelSelector') }}</span>
+          <NSelect
+            v-model:value="form.modelKey"
+            filterable
+            :options="modelSelectionOptions"
+            :loading="appStore.modelGroups.length === 0"
+            :disabled="modelSelectionOptions.length === 0"
+            :placeholder="t('cyberDefense.modelPlaceholder')"
+          />
         </label>
         <label class="full">
           <span>{{ t('cyberDefense.taskGoal') }}</span>
@@ -941,7 +1052,10 @@ onBeforeUnmount(() => {
 .task-rail .section-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; }
 .task-rail-actions { width: 100%; display: flex; align-items: center; gap: 7px; }
 .task-rail-actions :deep(.n-select) { width: auto; flex: 1; }
-.chat-toolbar :deep(.n-select) { width: 150px; }
+.chat-toolbar { flex-wrap: wrap; }
+.chat-controls { margin-left: auto; display: flex; align-items: center; gap: 7px; }
+.chat-controls :deep(.n-select) { width: 142px; }
+.chat-controls :deep(.n-select:last-child) { width: 250px; }
 
 .task-list,
 .workflow-list {
