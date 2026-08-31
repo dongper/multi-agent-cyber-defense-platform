@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
 import {
   NButton,
   NCheckbox,
@@ -41,8 +40,16 @@ import { useAppStore } from '@/stores/hermes/app'
 const BOARD = 'cyber-defense'
 const TASK_MODELS_KEY = 'redblue-task-model-selections-v1'
 const props = defineProps<{ embedded?: boolean; createRequest?: number }>()
+const emit = defineEmits<{
+  (event: 'run-state', state: {
+    running: boolean
+    taskId: string | null
+    taskTitle: string
+    phase: string
+    elapsed: number
+  }): void
+}>()
 const { t, locale } = useI18n()
-const router = useRouter()
 const toast = useMessage()
 const appStore = useAppStore()
 
@@ -75,6 +82,8 @@ const liveReasoning = ref('')
 const liveTools = ref<Array<{ name: string; status: 'running' | 'done' | 'failed' }>>([])
 const runPhase = ref<'idle' | 'connecting' | 'thinking' | 'answering' | 'tool' | 'stopping'>('idle')
 const runElapsed = ref(0)
+const runningTaskId = ref<string | null>(null)
+const runningTaskTitle = ref('')
 let activeRun: { abort: () => void } | null = null
 let runClock: ReturnType<typeof setInterval> | null = null
 let runStartedAt = 0
@@ -309,7 +318,9 @@ async function loadTask(id: string | null): Promise<void> {
   try {
     const savedModel = taskModelSelections.value[id]
     if (savedModel && modelSelectionOptions.value.some(option => option.value === savedModel)) selectedModelKey.value = savedModel
-    taskDetail.value = await getTask(id, { board: BOARD })
+    const detail = await getTask(id, { board: BOARD })
+    if (selectedTaskId.value !== id) return
+    taskDetail.value = detail
     await loadConversation(id)
   } catch (error) {
     toast.error(errorText(error))
@@ -321,12 +332,9 @@ async function loadTask(id: string | null): Promise<void> {
 async function loadConversation(taskId: string): Promise<void> {
   const sessionId = taskSessionId(taskId)
   const session = await fetchSession(sessionId, getActiveProfileName() || undefined)
-  if (!taskModelSelections.value[taskId] && session?.model) {
-    const sessionModel = findModelKey(session.provider, session.model)
-    if (sessionModel) selectedModelKey.value = sessionModel
-  }
+  let nextMessages: ConversationMessage[] = []
   if (session?.messages?.length) {
-    chatMessages.value = session.messages
+    nextMessages = session.messages
       .filter(message => (message.role === 'user' || message.role === 'assistant') && (message.content || message.reasoning))
       .map(message => ({
         id: message.id,
@@ -339,11 +347,17 @@ async function loadConversation(taskId: string): Promise<void> {
   } else {
     try {
       const detail = await fetchConversationDetail(sessionId)
-      chatMessages.value = detail.messages
+      nextMessages = detail.messages
     } catch {
-      chatMessages.value = []
+      nextMessages = []
     }
   }
+  if (selectedTaskId.value !== taskId) return
+  if (!taskModelSelections.value[taskId] && session?.model) {
+    const sessionModel = findModelKey(session.provider, session.model)
+    if (sessionModel) selectedModelKey.value = sessionModel
+  }
+  chatMessages.value = nextMessages
   await nextTick()
   scrollToLatest(false)
 }
@@ -368,6 +382,8 @@ function resetLiveRun() {
   if (runClock) clearInterval(runClock)
   runClock = null
   runStartedAt = 0
+  runningTaskId.value = null
+  runningTaskTitle.value = ''
   activeRun = null
 }
 
@@ -419,8 +435,8 @@ async function settleRun(taskId: string) {
   runClock = null
   activeRun = null
   try {
-    await loadConversation(taskId)
-    if (savedAnswer.trim() && !chatMessages.value.some(message => message.role === 'assistant' && message.content.trim() === savedAnswer.trim())) {
+    if (selectedTaskId.value === taskId) await loadConversation(taskId)
+    if (selectedTaskId.value === taskId && savedAnswer.trim() && !chatMessages.value.some(message => message.role === 'assistant' && message.content.trim() === savedAnswer.trim())) {
       chatMessages.value.push({
         id: `local-answer-${Date.now()}`,
         session_id: taskSessionId(taskId),
@@ -435,6 +451,8 @@ async function settleRun(taskId: string) {
     toast.error(errorText(error))
   } finally {
     runPhase.value = 'idle'
+    runningTaskId.value = null
+    runningTaskTitle.value = ''
     await nextTick()
     scrollToLatest()
   }
@@ -580,6 +598,8 @@ function sendMessage() {
   chatMessages.value.push(optimistic)
   composer.value = ''
   chatLoading.value = true
+  runningTaskId.value = task.id
+  runningTaskTitle.value = brandSafeText(task.title, false)
   liveAnswer.value = ''
   liveReasoning.value = ''
   liveTools.value = []
@@ -601,6 +621,8 @@ function sendMessage() {
       runPhase.value = 'idle'
       if (runClock) clearInterval(runClock)
       runClock = null
+      runningTaskId.value = null
+      runningTaskTitle.value = ''
       activeRun = null
       toast.error(errorText(error))
     })
@@ -616,6 +638,11 @@ function stopRun() {
   if (!activeRun || !chatLoading.value) return
   runPhase.value = 'stopping'
   activeRun.abort()
+}
+
+function returnToRunningTask() {
+  if (!runningTaskId.value) return
+  void selectTask(runningTaskId.value)
 }
 
 function handleComposerKeydown(event: KeyboardEvent) {
@@ -634,10 +661,6 @@ async function markDone() {
   } catch (error) {
     toast.error(errorText(error))
   }
-}
-
-function openWorkflow() {
-  void router.push({ name: 'hermes.workflow' })
 }
 
 onMounted(() => {
@@ -665,6 +688,17 @@ watch(selectedModelKey, key => {
   taskModelSelections.value = { ...taskModelSelections.value, [selectedTaskId.value]: key }
   persistTaskModelSelections()
 })
+watch(
+  [chatLoading, runPhase, runElapsed, runningTaskId, runningTaskTitle],
+  () => emit('run-state', {
+    running: chatLoading.value,
+    taskId: runningTaskId.value,
+    taskTitle: runningTaskTitle.value,
+    phase: runPhase.value,
+    elapsed: runElapsed.value,
+  }),
+  { immediate: true },
+)
 onBeforeUnmount(() => {
   if (scrollFrame) cancelAnimationFrame(scrollFrame)
   if (runClock) clearInterval(runClock)
@@ -782,7 +816,6 @@ onBeforeUnmount(() => {
               :key="conversation.id"
               class="history-row"
               :class="{ active: contentMode === 'history' && selectedHistoryId === conversation.id }"
-              :disabled="chatLoading"
               @click="openConversationHistory(conversation)"
             >
               <div class="history-row-top">
@@ -812,6 +845,11 @@ onBeforeUnmount(() => {
                 <div class="task-actions">
                   <NButton size="small" secondary @click="returnToTask">返回当前任务</NButton>
                 </div>
+              </div>
+
+              <div v-if="chatLoading" class="history-run-banner">
+                <div><i class="pulse-dot" /><span><b>{{ runningTaskTitle || '当前任务' }}</b> 正在后台研判 · {{ formatElapsed(runElapsed) }}</span></div>
+                <NButton size="small" type="info" secondary @click="returnToRunningTask">返回实时问答</NButton>
               </div>
 
               <div class="history-summary">
@@ -857,6 +895,11 @@ onBeforeUnmount(() => {
 
               <div class="task-context">{{ brandSafeText(selectedTask.body, false) }}</div>
 
+              <div v-if="chatLoading && runningTaskId !== selectedTaskId" class="history-run-banner task-run-banner">
+                <div><i class="pulse-dot" /><span><b>{{ runningTaskTitle || '其他任务' }}</b> 正在后台研判，当前展示的是 {{ brandSafeText(selectedTask.title, false) }}</span></div>
+                <NButton size="small" type="info" secondary @click="returnToRunningTask">返回运行任务</NButton>
+              </div>
+
               <div class="chat-toolbar">
                 <div>
                   <h3>{{ t('cyberDefense.realQa') }}</h3>
@@ -895,7 +938,7 @@ onBeforeUnmount(() => {
                     <template v-else>{{ displayMessageContent(entry) }}</template>
                   </div>
                 </div>
-                <div v-if="chatLoading" class="message-row assistant live-message">
+                <div v-if="chatLoading && runningTaskId === selectedTaskId" class="message-row assistant live-message">
                   <div class="message-meta live-meta">
                     <span><i class="pulse-dot" />{{ t(`cyberDefense.runPhase.${runPhase}`) }}</span>
                     <time>{{ formatElapsed(runElapsed) }}</time>
@@ -921,12 +964,13 @@ onBeforeUnmount(() => {
                   type="textarea"
                   :autosize="{ minRows: 2, maxRows: 6 }"
                   :placeholder="t('cyberDefense.composerPlaceholder')"
-                  :disabled="!canRun"
+                  :disabled="!canRun || (chatLoading && runningTaskId !== selectedTaskId)"
                   @keydown="handleComposerKeydown"
                 />
                 <div class="composer-footer">
                   <span>{{ t('cyberDefense.sendHint') }}</span>
-                  <NButton v-if="chatLoading" type="error" secondary @click="stopRun">{{ t('cyberDefense.stopRun') }}</NButton>
+                  <NButton v-if="chatLoading && runningTaskId === selectedTaskId" type="error" secondary @click="stopRun">{{ t('cyberDefense.stopRun') }}</NButton>
+                  <NButton v-else-if="chatLoading" disabled>已有任务研判中</NButton>
                   <NButton v-else type="primary" :disabled="!composer.trim() || !canRun" @click="sendMessage">
                     {{ t('cyberDefense.send') }}
                   </NButton>
@@ -937,28 +981,6 @@ onBeforeUnmount(() => {
           </NSpin>
         </main>
 
-        <aside class="resource-panel">
-          <section>
-            <div class="resource-heading">
-              <div>
-                <h3>{{ t('cyberDefense.agentOrchestration') }}</h3>
-                <span>{{ workflows.length }} {{ t('cyberDefense.workflows') }}</span>
-              </div>
-              <NButton text size="tiny" @click="openWorkflow">{{ t('cyberDefense.openCanvas') }}</NButton>
-            </div>
-            <div v-if="workflows.length" class="workflow-list">
-              <button v-for="workflow in workflows.slice(0, 6)" :key="workflow.id" @click="openWorkflow">
-                <strong>{{ workflow.name }}</strong>
-                <span>{{ t('cyberDefense.workflowShape', { nodes: workflow.nodes.length, edges: workflow.edges.length }) }}</span>
-              </button>
-            </div>
-            <NEmpty v-else size="small" :description="t('cyberDefense.noWorkflows')">
-              <template #extra>
-                <NButton size="small" @click="openWorkflow">{{ t('cyberDefense.createWorkflow') }}</NButton>
-              </template>
-            </NEmpty>
-          </section>
-        </aside>
       </section>
     </NSpin>
 
@@ -1040,18 +1062,15 @@ onBeforeUnmount(() => {
   .cyber-body { overflow: hidden; }
   .cyber-body > :deep(.n-spin-content) { height: 100%; min-height: 0; overflow: hidden; }
 
-  .task-rail,
-  .resource-panel { background: #091827; }
+  .task-rail { background: #091827; }
 
   .task-main { background: #0b1b2a; }
 
   .task-row,
-  .history-row,
-  .workflow-list button { border-color: #203b51; background: #0d2233; }
+  .history-row { border-color: #203b51; background: #0d2233; }
 
   .task-row:hover,
-  .history-row:hover,
-  .workflow-list button:hover { border-color: #345c76; background: #112b40; }
+  .history-row:hover { border-color: #345c76; background: #112b40; }
 
   .task-row.active { border-color: #2e91ff; box-shadow: inset 3px 0 0 #2e91ff, 0 0 0 1px rgba(46, 145, 255, .12); }
   .history-row.active { border-color: #2e91ff; background: #102b40; box-shadow: inset 3px 0 0 #2e91ff; }
@@ -1113,7 +1132,6 @@ onBeforeUnmount(() => {
 
 .overview-heading,
 .section-toolbar,
-.resource-heading,
 .task-heading,
 .chat-toolbar,
 .task-row-top {
@@ -1125,7 +1143,6 @@ onBeforeUnmount(() => {
 
 .overview-heading h3,
 .section-toolbar h3,
-.resource-heading h3,
 .chat-toolbar h3,
 .task-heading h3 {
   margin: 0;
@@ -1134,7 +1151,6 @@ onBeforeUnmount(() => {
 
 .overview-heading span,
 .section-toolbar span,
-.resource-heading span,
 .chat-toolbar span {
   color: $text-muted;
   font-size: 11px;
@@ -1162,11 +1178,10 @@ onBeforeUnmount(() => {
   min-height: 0;
   height: calc(100% - 155px);
   display: grid;
-  grid-template-columns: 290px minmax(420px, 1fr) 300px;
+  grid-template-columns: 290px minmax(420px, 1fr);
 }
 
-.task-rail,
-.resource-panel {
+.task-rail {
   min-height: 0;
   padding: 16px;
   overflow: auto;
@@ -1174,8 +1189,6 @@ onBeforeUnmount(() => {
 }
 
 .task-rail { border-right: 1px solid $border-light; }
-.resource-panel { border-left: 1px solid $border-light; }
-.resource-panel section + section { margin-top: 22px; }
 .section-toolbar :deep(.n-select) { width: 105px; }
 .task-rail .section-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; }
 .rail-tabs {
@@ -1206,16 +1219,14 @@ onBeforeUnmount(() => {
 .chat-controls :deep(.n-select) { width: 142px; }
 .chat-controls :deep(.n-select:last-child) { width: 250px; }
 
-.task-list,
-.workflow-list {
+.task-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-top: 12px;
 }
 
-.task-row,
-.workflow-list button {
+.task-row {
   width: 100%;
   border: 1px solid $border-light;
   border-radius: $radius-md;
@@ -1266,6 +1277,30 @@ onBeforeUnmount(() => {
   color: $text-muted;
   font-size: 10px;
 }
+
+.history-run-banner {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(47, 145, 255, .42);
+  border-radius: 9px;
+  color: $text-secondary;
+  background: rgba(47, 145, 255, .08);
+  font-size: 11px;
+}
+
+.history-run-banner > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.history-run-banner b { color: $text-primary; font-weight: 600; }
 
 .history-summary {
   flex: 0 0 auto;
@@ -1403,11 +1438,6 @@ onBeforeUnmount(() => {
 .composer-footer { justify-content: space-between; margin-top: 8px; }
 .composer-footer span { color: $text-muted; font-size: 10px; }
 
-.workflow-list button {
-  strong { display: block; font-size: 12px; }
-  span { display: block; margin-top: 4px; color: $text-muted; font-size: 10px; }
-}
-
 .history-section { min-height: 0; }
 .history-list {
   display: flex;
@@ -1475,7 +1505,6 @@ onBeforeUnmount(() => {
 @media (max-width: 1260px) {
   .metric-grid { grid-template-columns: repeat(3, 1fr); }
   .workspace-grid { grid-template-columns: 270px minmax(400px, 1fr); }
-  .resource-panel { display: none; }
 }
 
 @media (max-width: $breakpoint-mobile) {

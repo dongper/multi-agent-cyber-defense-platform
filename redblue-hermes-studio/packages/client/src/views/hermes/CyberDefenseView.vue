@@ -23,6 +23,13 @@ import {
 type ViewName = 'overview' | 'tasks' | 'alerts' | 'agents' | 'chain' | 'report'
 type AgentRunStatus = 'idle' | 'running' | 'completed' | 'failed'
 type TraceEvent = { id: string; agent: string; action: string; detail: string; at: number; status: 'info' | 'success' | 'warning' }
+type TaskRunState = {
+  running: boolean
+  taskId: string | null
+  taskTitle: string
+  phase: string
+  elapsed: number
+}
 
 const BOARD = 'cyber-defense'
 const STUDIO_KEY = 'redblue-hermes-studio-v2'
@@ -91,6 +98,7 @@ function persistView(view: ViewName) {
 const activeView = ref<ViewName>(readViewFromHash())
 const cachedViews = ref<Set<ViewName>>(new Set(CACHED_VIEWS.has(activeView.value) ? [activeView.value] : []))
 const taskCreateRequest = ref(0)
+const taskRunState = ref<TaskRunState>({ running: false, taskId: null, taskTitle: '', phase: 'idle', elapsed: 0 })
 const loading = ref(true)
 const conversations = ref<ConversationSummary[]>([])
 const skillCount = ref(0)
@@ -126,6 +134,11 @@ const viewMeta: Record<ViewName, { eyebrow: string; title: string; subtitle: str
 }
 
 const activeMeta = computed(() => viewMeta[activeView.value])
+const taskRunElapsed = computed(() => {
+  const seconds = taskRunState.value.elapsed
+  const minutes = Math.floor(seconds / 60)
+  return `${minutes ? `${minutes}m ` : ''}${String(seconds % 60).padStart(2, '0')}s`
+})
 const currentTask = computed(() => taskDetail.value?.task || tasks.value.find(task => task.id === selectedTaskId.value) || null)
 const cutoff = computed(() => Math.floor(Date.now() / 1000) - periodDays.value * 86_400)
 const periodConversations = computed(() => conversations.value.filter(item => item.last_active >= cutoff.value))
@@ -451,7 +464,13 @@ onUnmounted(() => {
     <section class="module-content">
       <header class="module-topbar">
         <div><small>{{ activeMeta.eyebrow }}</small><h1>{{ activeMeta.title }}</h1><p>{{ activeMeta.subtitle }}</p></div>
-        <div class="top-actions"><NButton v-if="activeView !== 'alerts'" size="small" secondary @click="loadData()">刷新真实数据</NButton><NButton v-if="activeView !== 'tasks' && activeView !== 'alerts'" size="small" type="primary" @click="openTaskCreator">＋ 新建任务</NButton></div>
+        <div class="top-actions">
+          <NButton v-if="taskRunState.running && activeView !== 'tasks'" size="small" type="info" secondary @click="switchView('tasks')">
+            <span class="top-run-indicator"><i />{{ taskRunState.taskTitle || '当前任务' }}研判中 · {{ taskRunElapsed }}</span>
+          </NButton>
+          <NButton v-if="activeView !== 'alerts'" size="small" secondary @click="loadData()">刷新真实数据</NButton>
+          <NButton v-if="activeView !== 'tasks' && activeView !== 'alerts'" size="small" type="primary" @click="openTaskCreator">＋ 新建任务</NButton>
+        </div>
       </header>
 
       <NSpin :show="loading" class="module-body">
@@ -489,7 +508,10 @@ onUnmounted(() => {
           </div>
         </template>
 
-        <CyberTaskWorkspace v-if="cachedViews.has('tasks')" v-show="activeView === 'tasks'" embedded :create-request="taskCreateRequest" />
+        <CyberTaskWorkspace
+          v-if="cachedViews.has('tasks')" v-show="activeView === 'tasks'" embedded
+          :create-request="taskCreateRequest" @run-state="taskRunState = $event"
+        />
 
         <AlertNoiseWorkbench v-if="cachedViews.has('alerts')" v-show="activeView === 'alerts'" />
 
