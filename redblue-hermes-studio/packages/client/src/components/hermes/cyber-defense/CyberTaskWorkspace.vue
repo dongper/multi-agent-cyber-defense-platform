@@ -41,6 +41,7 @@ const BOARD = 'cyber-defense'
 const TASK_MODELS_KEY = 'redblue-task-model-selections-v1'
 const props = defineProps<{ embedded?: boolean; createRequest?: number }>()
 const emit = defineEmits<{
+  (event: 'task-select', taskId: string): void
   (event: 'run-state', state: {
     running: boolean
     taskId: string | null
@@ -66,7 +67,7 @@ const chatMessages = ref<ConversationMessage[]>([])
 const workflows = ref<WorkflowRecord[]>([])
 const stats = ref<KanbanStats>({ total: 0, by_status: {}, by_assignee: {} })
 const periodDays = ref(30)
-const taskFilter = ref('active')
+const taskFilter = ref('all')
 const railMode = ref<'tasks' | 'history'>('tasks')
 const contentMode = ref<'task' | 'history'>('task')
 const historyLoading = ref(false)
@@ -87,6 +88,7 @@ const runningTaskTitle = ref('')
 let activeRun: { abort: () => void } | null = null
 let runClock: ReturnType<typeof setInterval> | null = null
 let runStartedAt = 0
+let runTerminalStatus: 'pending' | 'completed' | 'failed' | 'stopped' = 'pending'
 let scrollFrame = 0
 
 const form = ref({
@@ -129,9 +131,9 @@ const modelSelectionOptions = computed(() => appStore.modelGroups.flatMap(group 
 const activeModel = computed(() => parseModelKey(selectedModelKey.value))
 const selectedTask = computed(() => taskDetail.value?.task || null)
 const filteredTasks = computed(() => taskList.value
-  .filter(task => taskFilter.value === 'all' || activeStatuses.has(task.status))
+  .filter(task => taskFilter.value === 'all' || activeStatuses.has(taskDisplayStatus(task)))
   .sort((a, b) => {
-    const statusDelta = statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status)
+    const statusDelta = statusOrder.indexOf(taskDisplayStatus(a)) - statusOrder.indexOf(taskDisplayStatus(b))
     return statusDelta || b.created_at - a.created_at
   }))
 const periodConversations = computed(() => {
@@ -215,6 +217,13 @@ function statusType(status: string): 'default' | 'success' | 'warning' | 'error'
   if (status === 'running' || status === 'review') return 'info'
   if (status === 'ready' || status === 'scheduled') return 'warning'
   return 'default'
+}
+
+function taskDisplayStatus(task: KanbanTask): string {
+  if (chatLoading.value && runningTaskId.value === task.id) return 'running'
+  if (task.status !== 'blocked') return task.status
+  const conversation = conversations.value.find(item => item.id === taskSessionId(task.id))
+  return conversation && conversation.message_count >= 2 && !conversation.is_active ? 'done' : task.status
 }
 
 function formatTime(value: number | null | undefined): string {
@@ -321,6 +330,7 @@ async function loadTask(id: string | null): Promise<void> {
     const detail = await getTask(id, { board: BOARD })
     if (selectedTaskId.value !== id) return
     taskDetail.value = detail
+    emit('task-select', id)
     await loadConversation(id)
   } catch (error) {
     toast.error(errorText(error))
@@ -384,6 +394,7 @@ function resetLiveRun() {
   runStartedAt = 0
   runningTaskId.value = null
   runningTaskTitle.value = ''
+  runTerminalStatus = 'pending'
   activeRun = null
 }
 
@@ -420,9 +431,11 @@ function handleRunEvent(event: RunEvent) {
     const name = event.tool || event.name || t('cyberDefense.unknownTool')
     const item = [...liveTools.value].reverse().find(tool => tool.name === name && tool.status === 'running')
     if (item) item.status = event.event === 'tool.failed' ? 'failed' : 'done'
-  } else if (event.event === 'run.completed' && !liveAnswer.value.trim() && typeof event.output === 'string') {
-    liveAnswer.value = event.output
+  } else if (event.event === 'run.completed') {
+    runTerminalStatus = 'completed'
+    if (!liveAnswer.value.trim() && typeof event.output === 'string') liveAnswer.value = event.output
   } else if (event.event === 'run.failed') {
+    runTerminalStatus = 'failed'
     liveAnswer.value ||= runFailureText(event.error)
   }
   scrollToLatest()
@@ -430,12 +443,20 @@ function handleRunEvent(event: RunEvent) {
 
 async function settleRun(taskId: string) {
   const savedAnswer = liveAnswer.value
+  const completed = runTerminalStatus === 'completed'
   chatLoading.value = false
   if (runClock) clearInterval(runClock)
   runClock = null
   activeRun = null
   try {
-    if (selectedTaskId.value === taskId) await loadConversation(taskId)
+    if (completed) {
+      await completeTasks([taskId], '智能体问答已完成，结果已写入任务会话。', { board: BOARD })
+      await loadTaskList()
+    }
+    if (selectedTaskId.value === taskId) {
+      if (completed) await loadTask(taskId)
+      else await loadConversation(taskId)
+    }
     if (selectedTaskId.value === taskId && savedAnswer.trim() && !chatMessages.value.some(message => message.role === 'assistant' && message.content.trim() === savedAnswer.trim())) {
       chatMessages.value.push({
         id: `local-answer-${Date.now()}`,
@@ -453,6 +474,7 @@ async function settleRun(taskId: string) {
     runPhase.value = 'idle'
     runningTaskId.value = null
     runningTaskTitle.value = ''
+    runTerminalStatus = 'pending'
     await nextTick()
     scrollToLatest()
   }
@@ -600,6 +622,7 @@ function sendMessage() {
   chatLoading.value = true
   runningTaskId.value = task.id
   runningTaskTitle.value = brandSafeText(task.title, false)
+  runTerminalStatus = 'pending'
   liveAnswer.value = ''
   liveReasoning.value = ''
   liveTools.value = []
@@ -617,6 +640,7 @@ function sendMessage() {
       source: 'api_server',
     }, handleRunEvent, () => void settleRun(task.id), (error) => {
       chatLoading.value = false
+      runTerminalStatus = 'failed'
       liveAnswer.value ||= errorText(error)
       runPhase.value = 'idle'
       if (runClock) clearInterval(runClock)
@@ -636,6 +660,7 @@ function sendMessage() {
 
 function stopRun() {
   if (!activeRun || !chatLoading.value) return
+  runTerminalStatus = 'stopped'
   runPhase.value = 'stopping'
   activeRun.abort()
 }
@@ -793,7 +818,7 @@ onBeforeUnmount(() => {
               @click="selectTask(task.id)"
             >
               <div class="task-row-top">
-                <NTag size="tiny" :type="statusType(task.status)" :bordered="false">{{ statusLabel(task.status) }}</NTag>
+                <NTag size="tiny" :type="statusType(taskDisplayStatus(task))" :bordered="false">{{ statusLabel(taskDisplayStatus(task)) }}</NTag>
                 <span>P{{ task.priority }}</span>
               </div>
               <strong>{{ brandSafeText(task.title, false) }}</strong>
@@ -885,11 +910,11 @@ onBeforeUnmount(() => {
                   <div class="eyebrow">{{ selectedTask.id }}</div>
                   <h3>{{ brandSafeText(selectedTask.title, false) }}</h3>
                   <div class="tag-row">
-                    <NTag size="small" :type="statusType(selectedTask.status)">{{ statusLabel(selectedTask.status) }}</NTag>
+                    <NTag size="small" :type="statusType(taskDisplayStatus(selectedTask))">{{ statusLabel(taskDisplayStatus(selectedTask)) }}</NTag>
                   </div>
                 </div>
                 <div class="task-actions">
-                  <NButton v-if="selectedTask.status !== 'done'" size="small" @click="markDone">{{ t('cyberDefense.markDone') }}</NButton>
+                  <NButton v-if="taskDisplayStatus(selectedTask) !== 'done'" size="small" @click="markDone">{{ t('cyberDefense.markDone') }}</NButton>
                 </div>
               </div>
 

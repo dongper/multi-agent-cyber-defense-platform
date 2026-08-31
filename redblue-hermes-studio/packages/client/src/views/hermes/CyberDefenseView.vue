@@ -154,9 +154,9 @@ const evidenceMessages = computed<HermesMessage[]>(() => {
 })
 const evidenceRows = computed(() => evidenceMessages.value
   .filter(message => message.role !== 'system' && (message.content || message.tool_name || message.tool_calls?.length))
-  .slice(-14)
+  .slice(-40)
   .map((message, index) => ({
-    id: String(message.id), index: index + 1, role: message.role,
+    id: `${message.session_id}:${message.id}:${index}`, index: index + 1, role: message.role,
     title: displaySafeText(message.tool_name || (message.role === 'user' ? '操作员输入' : message.role === 'assistant' ? '智能体分析' : '工具结果')),
     content: displaySafeText(message.content || message.tool_calls?.map(call => call?.function?.name || call?.name).filter(Boolean).join(', ') || '已记录工具调用'),
     at: message.timestamp,
@@ -316,6 +316,14 @@ function openTaskCreator() {
 async function selectTask(id: string) {
   selectedTaskId.value = id
   await loadTaskDetail()
+}
+
+function handleTaskRunState(state: TaskRunState) {
+  const completedTaskId = taskRunState.value.running && !state.running
+    ? taskRunState.value.taskId || state.taskId
+    : null
+  taskRunState.value = state
+  if (completedTaskId && selectedTaskId.value === completedTaskId) void loadTaskDetail()
 }
 
 function saveAgent(agent: CyberStudioAgent) {
@@ -510,7 +518,7 @@ onUnmounted(() => {
 
         <CyberTaskWorkspace
           v-if="cachedViews.has('tasks')" v-show="activeView === 'tasks'" embedded
-          :create-request="taskCreateRequest" @run-state="taskRunState = $event"
+          :create-request="taskCreateRequest" @task-select="selectTask" @run-state="handleTaskRunState"
         />
 
         <AlertNoiseWorkbench v-if="cachedViews.has('alerts')" v-show="activeView === 'alerts'" />
