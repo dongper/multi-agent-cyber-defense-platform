@@ -43,7 +43,7 @@ describe('chat run webhooks', () => {
     )
     return createChatWebhookEndpoint({
       name: 'Operations',
-      url: 'https://93.184.216.34/hermes',
+      url: 'https://203.0.113.34/hermes',
       secret: 'server-secret',
       event_types: ['chat.run.completed', 'chat.run.failed'],
       profiles: [],
@@ -71,7 +71,7 @@ describe('chat run webhooks', () => {
 
   it('stores multiple endpoint configurations without creating event or delivery history tables', async () => {
     await createEndpoint()
-    await createEndpoint({ name: 'Audit', url: 'https://93.184.216.35/audit' })
+    await createEndpoint({ name: 'Audit', url: 'https://203.0.113.35/audit' })
 
     const { listChatWebhookEndpoints } = await import(
       '../../packages/server/src/db/hermes/chat-webhook-store'
@@ -113,11 +113,11 @@ describe('chat run webhooks', () => {
     const target = await resolveSafeWebhookTarget(
       'https://hooks.example/events',
       false,
-      (async () => [{ address: '93.184.216.34', family: 4 }]) as any,
+      (async () => [{ address: '203.0.113.34', family: 4 }]) as any,
     )
     expect(target).toEqual({
       url: 'https://hooks.example/events',
-      address: '93.184.216.34',
+      address: '203.0.113.34',
       family: 4,
     })
   })
@@ -387,13 +387,13 @@ describe('chat run webhooks', () => {
 
   it('keeps one endpoint ordered across a retry while allowing endpoint-level concurrency', async () => {
     const endpoint = await createEndpoint({ max_retries: 1 })
-    await createEndpoint({ name: 'Parallel', url: 'https://93.184.216.35/parallel', max_retries: 0 })
+    await createEndpoint({ name: 'Parallel', url: 'https://203.0.113.35/parallel', max_retries: 0 })
     const calls: Array<{ url: string; eventId: string }> = []
     let firstRunAttempt = true
     const fetchImpl = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       const eventId = JSON.parse(String(init?.body || '{}')).id
       calls.push({ url: String(url), eventId })
-      if (String(url).includes('93.184.216.34') && eventId === 'run-a' && firstRunAttempt) {
+      if (String(url).includes('203.0.113.34') && eventId === 'run-a' && firstRunAttempt) {
         firstRunAttempt = false
         return new Response('temporary', { status: 503 })
       }
@@ -423,12 +423,12 @@ describe('chat run webhooks', () => {
     }
     await waitFor(() => calls.length >= 2)
     const firstWave = calls.map(call => `${call.url}:${call.eventId}`)
-    expect(firstWave).toContain('https://93.184.216.34/hermes:run-a')
-    expect(firstWave).toContain('https://93.184.216.35/parallel:run-a')
-    expect(calls.filter(call => call.url.includes('93.184.216.34')).map(call => call.eventId)).toEqual(['run-a'])
+    expect(firstWave).toContain('https://203.0.113.34/hermes:run-a')
+    expect(firstWave).toContain('https://203.0.113.35/parallel:run-a')
+    expect(calls.filter(call => call.url.includes('203.0.113.34')).map(call => call.eventId)).toEqual(['run-a'])
 
-    await waitFor(() => calls.filter(call => call.url.includes('93.184.216.34')).length === 3)
-    expect(calls.filter(call => call.url.includes('93.184.216.34')).map(call => call.eventId)).toEqual([
+    await waitFor(() => calls.filter(call => call.url.includes('203.0.113.34')).length === 3)
+    expect(calls.filter(call => call.url.includes('203.0.113.34')).map(call => call.eventId)).toEqual([
       'run-a',
       'run-a',
       'run-b',

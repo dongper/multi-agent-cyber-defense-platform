@@ -60,6 +60,12 @@ const workflows = ref<WorkflowRecord[]>([])
 const stats = ref<KanbanStats>({ total: 0, by_status: {}, by_assignee: {} })
 const periodDays = ref(30)
 const taskFilter = ref('active')
+const railMode = ref<'tasks' | 'history'>('tasks')
+const contentMode = ref<'task' | 'history'>('task')
+const historyLoading = ref(false)
+const historyListLoading = ref(false)
+const selectedHistoryId = ref<string | null>(null)
+const historyMessages = ref<ConversationMessage[]>([])
 const mode = ref('joint')
 const selectedModelKey = ref('')
 const composer = ref('')
@@ -123,6 +129,10 @@ const periodConversations = computed(() => {
   const cutoff = Math.floor(Date.now() / 1000) - periodDays.value * 86_400
   return conversations.value.filter(item => item.last_active >= cutoff)
 })
+const conversationHistory = computed(() => [...conversations.value]
+  .sort((a, b) => b.last_active - a.last_active)
+  .slice(0, 100))
+const selectedHistory = computed(() => conversations.value.find(item => item.id === selectedHistoryId.value) || null)
 const qaSessionCount = computed(() => periodConversations.value.length)
 const qaMessageCount = computed(() => periodConversations.value.reduce((sum, item) => sum + item.message_count, 0))
 const toolCallCount = computed(() => periodConversations.value.reduce((sum, item) => sum + item.tool_call_count, 0))
@@ -212,7 +222,7 @@ function formatTime(value: number | null | undefined): string {
 function brandSafeText(value: string | null | undefined, hideCapabilityDetails = true): string {
   let text = String(value || '')
     .replace(/Hermes Studio/gi, '红蓝队协同安全运营平台')
-    .replace(/Hermes/gi, '安全智能体')
+    .replace(/Hermes/gi, '联通安全智能体')
     .replace(/AUTHORIZED_SECURITY_TEST/g, 'AUTHORIZED_SECURITY_VALIDATION')
     .replace(/测试/g, '验证')
   if (hideCapabilityDetails) {
@@ -222,10 +232,15 @@ function brandSafeText(value: string | null | undefined, hideCapabilityDetails =
         : line
     )).filter((line, index, rows) => line !== rows[index - 1]).join('\n')
   }
-  if (/HTTP\s*402|Insufficient Balance/i.test(text)) return '模型服务余额不足，请检查当前模型账户额度后重试。'
-  if (/HTTP\s*401|Unauthorized/i.test(text)) return '模型服务认证失败，请检查当前模型配置后重试。'
-  if (/timeout|timed out/i.test(text)) return '本次请求等待超时，你可以重试或切换模型。'
   return text
+}
+
+function runFailureText(value: string | null | undefined): string {
+  const error = String(value || '').trim()
+  if (/HTTP\s*402\b|Insufficient Balance/i.test(error)) return '模型服务余额不足，请检查当前模型账户额度后重试。'
+  if (/HTTP\s*401\b|^Unauthorized\.?$/i.test(error)) return '模型服务认证失败，请检查当前模型配置后重试。'
+  if (/timeout|timed out/i.test(error)) return '本次请求等待超时，你可以重试或切换模型。'
+  return brandSafeText(error || t('cyberDefense.runFailed'))
 }
 
 function displayMessageContent(message: ConversationMessage): string {
@@ -392,7 +407,7 @@ function handleRunEvent(event: RunEvent) {
   } else if (event.event === 'run.completed' && !liveAnswer.value.trim() && typeof event.output === 'string') {
     liveAnswer.value = event.output
   } else if (event.event === 'run.failed') {
-    liveAnswer.value ||= event.error || t('cyberDefense.runFailed')
+    liveAnswer.value ||= runFailureText(event.error)
   }
   scrollToLatest()
 }
@@ -448,9 +463,49 @@ function changePeriod(days: number) {
 }
 
 async function selectTask(id: string) {
+  railMode.value = 'tasks'
+  contentMode.value = 'task'
   if (selectedTaskId.value === id) return
   selectedTaskId.value = id
   await loadTask(id)
+}
+
+async function openConversationHistory(summary: ConversationSummary) {
+  railMode.value = 'history'
+  contentMode.value = 'history'
+  selectedHistoryId.value = summary.id
+  historyMessages.value = []
+  historyLoading.value = true
+  try {
+    const detail = await fetchConversationDetail(summary.id)
+    historyMessages.value = detail.messages
+  } catch (error) {
+    toast.error(errorText(error))
+  } finally {
+    historyLoading.value = false
+    await nextTick()
+    scrollToLatest(false)
+  }
+}
+
+async function showConversationHistory() {
+  railMode.value = 'history'
+  historyListLoading.value = true
+  try {
+    conversations.value = await fetchConversationSummaries({ humanOnly: true, limit: 1000 })
+  } catch (error) {
+    toast.error(errorText(error))
+  } finally {
+    historyListLoading.value = false
+  }
+}
+
+function returnToTask() {
+  railMode.value = 'tasks'
+  contentMode.value = 'task'
+  selectedHistoryId.value = null
+  historyMessages.value = []
+  void nextTick().then(() => scrollToLatest(false))
 }
 
 async function handleCreateTask() {
@@ -486,6 +541,7 @@ async function handleCreateTask() {
     resetForm()
     await loadTaskList()
     selectedTaskId.value = task.id
+    contentMode.value = 'task'
     await loadTask(task.id)
     toast.success(t('cyberDefense.taskCreated'))
   } catch (error) {
@@ -679,10 +735,14 @@ onBeforeUnmount(() => {
         <aside class="task-rail">
           <div class="section-toolbar">
             <div>
-              <h3>{{ t('cyberDefense.taskModule') }}</h3>
-              <span>{{ filteredTasks.length }} {{ t('cyberDefense.items') }}</span>
+              <h3>{{ railMode === 'tasks' ? t('cyberDefense.taskModule') : '历史问答' }}</h3>
+              <span>{{ railMode === 'tasks' ? `${filteredTasks.length} ${t('cyberDefense.items')}` : `${conversations.length} 个真实会话` }}</span>
             </div>
-            <div class="task-rail-actions">
+            <div class="rail-tabs">
+              <button :class="{ active: railMode === 'tasks' }" @click="railMode = 'tasks'">安全任务</button>
+              <button :class="{ active: railMode === 'history' }" @click="showConversationHistory">历史问答</button>
+            </div>
+            <div v-if="railMode === 'tasks'" class="task-rail-actions">
               <NButton size="tiny" type="primary" @click="createVisible = true">＋ {{ t('cyberDefense.newTask') }}</NButton>
               <NSelect v-model:value="taskFilter" size="tiny" :options="[
                 { label: t('cyberDefense.activeOnly'), value: 'active' },
@@ -690,7 +750,7 @@ onBeforeUnmount(() => {
               ]" />
             </div>
           </div>
-          <div v-if="filteredTasks.length" class="task-list">
+          <div v-if="railMode === 'tasks' && filteredTasks.length" class="task-list">
             <button
               v-for="task in filteredTasks"
               :key="task.id"
@@ -707,16 +767,81 @@ onBeforeUnmount(() => {
               <time>{{ formatTime(task.created_at) }}</time>
             </button>
           </div>
-          <NEmpty v-else size="small" :description="t('cyberDefense.noTasks')">
+          <NEmpty v-else-if="railMode === 'tasks'" size="small" :description="t('cyberDefense.noTasks')">
             <template #extra>
               <NButton size="small" @click="createVisible = true">{{ t('cyberDefense.createFirstTask') }}</NButton>
             </template>
           </NEmpty>
+          <div v-if="railMode === 'history'" class="history-refresh-row">
+            <span>已合并通用问答与任务会话</span>
+            <NButton size="tiny" secondary :loading="historyListLoading" @click="showConversationHistory">刷新记录</NButton>
+          </div>
+          <div v-if="railMode === 'history' && conversationHistory.length" class="history-list rail-history-list">
+            <button
+              v-for="conversation in conversationHistory"
+              :key="conversation.id"
+              class="history-row"
+              :class="{ active: contentMode === 'history' && selectedHistoryId === conversation.id }"
+              :disabled="chatLoading"
+              @click="openConversationHistory(conversation)"
+            >
+              <div class="history-row-top">
+                <span>{{ formatTime(conversation.last_active) }}</span>
+                <small>{{ conversation.message_count }} 条</small>
+              </div>
+              <strong>{{ brandSafeText(conversation.title || conversation.preview || '未命名会话', false) }}</strong>
+              <p>{{ brandSafeText(conversation.preview || '点击查看完整问答记录', false) }}</p>
+            </button>
+          </div>
+          <NEmpty v-else-if="railMode === 'history'" size="small" description="暂无历史问答" />
         </aside>
 
         <main class="task-main">
-          <NSpin :show="taskLoading">
-            <template v-if="selectedTask">
+          <NSpin :show="taskLoading || historyLoading">
+            <template v-if="contentMode === 'history'">
+              <div class="task-heading history-heading">
+                <div>
+                  <div class="eyebrow">CONVERSATION ARCHIVE</div>
+                  <h3>{{ brandSafeText(selectedHistory?.title || selectedHistory?.preview || '历史问答', false) }}</h3>
+                  <div class="tag-row">
+                    <NTag size="small" type="info">历史问答</NTag>
+                    <NTag v-if="selectedHistory?.model" size="small" :bordered="false">{{ selectedHistory.model }}</NTag>
+                    <span class="history-time">{{ formatTime(selectedHistory?.last_active) }}</span>
+                  </div>
+                </div>
+                <div class="task-actions">
+                  <NButton size="small" secondary @click="returnToTask">返回当前任务</NButton>
+                </div>
+              </div>
+
+              <div class="history-summary">
+                <span><b>{{ selectedHistory?.message_count || historyMessages.length }}</b> 条消息</span>
+                <span><b>{{ selectedHistory?.thread_session_count || 1 }}</b> 个会话分支</span>
+                <span>记录已从平台问答历史载入</span>
+              </div>
+
+              <div ref="chatScroller" class="chat-messages history-messages">
+                <div v-if="!historyMessages.length && !historyLoading" class="chat-empty">
+                  <strong>该会话暂无可预览消息</strong>
+                  <span>会话摘要仍保留在历史记录中</span>
+                </div>
+                <div v-for="entry in historyMessages" :key="entry.id" class="message-row" :class="entry.role">
+                  <div class="message-meta">
+                    <span>{{ entry.role === 'user' ? t('cyberDefense.operator') : t('cyberDefense.securityAgent') }}</span>
+                    <time>{{ formatTime(entry.timestamp) }}</time>
+                  </div>
+                  <details v-if="entry.reasoning" class="reasoning-panel">
+                    <summary>{{ t('cyberDefense.reasoningProcess') }}</summary>
+                    <div>{{ brandSafeText(entry.reasoning) }}</div>
+                  </details>
+                  <div class="message-bubble">
+                    <MarkdownRenderer v-if="entry.role === 'assistant'" :content="displayMessageContent(entry)" />
+                    <template v-else>{{ displayMessageContent(entry) }}</template>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else-if="selectedTask">
               <div class="task-heading">
                 <div>
                   <div class="eyebrow">{{ selectedTask.id }}</div>
@@ -921,12 +1046,15 @@ onBeforeUnmount(() => {
   .task-main { background: #0b1b2a; }
 
   .task-row,
+  .history-row,
   .workflow-list button { border-color: #203b51; background: #0d2233; }
 
   .task-row:hover,
+  .history-row:hover,
   .workflow-list button:hover { border-color: #345c76; background: #112b40; }
 
   .task-row.active { border-color: #2e91ff; box-shadow: inset 3px 0 0 #2e91ff, 0 0 0 1px rgba(46, 145, 255, .12); }
+  .history-row.active { border-color: #2e91ff; background: #102b40; box-shadow: inset 3px 0 0 #2e91ff; }
 
   .task-context { border-left-color: #e85163; background: #0a1724; color: #9db0c1; }
 
@@ -1050,6 +1178,27 @@ onBeforeUnmount(() => {
 .resource-panel section + section { margin-top: 22px; }
 .section-toolbar :deep(.n-select) { width: 105px; }
 .task-rail .section-toolbar { align-items: flex-start; flex-direction: column; gap: 10px; }
+.rail-tabs {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  background: $bg-primary;
+}
+.rail-tabs button {
+  padding: 7px 8px;
+  border: 0;
+  border-radius: $radius-sm;
+  color: $text-muted;
+  background: transparent;
+  font-size: 10px;
+  cursor: pointer;
+}
+.rail-tabs button:hover { color: $text-primary; }
+.rail-tabs button.active { color: #dcecff; background: rgba(47, 145, 255, .18); box-shadow: inset 0 0 0 1px rgba(47, 145, 255, .32); }
 .task-rail-actions { width: 100%; display: flex; align-items: center; gap: 7px; }
 .task-rail-actions :deep(.n-select) { width: auto; flex: 1; }
 .chat-toolbar { flex-wrap: wrap; }
@@ -1111,6 +1260,32 @@ onBeforeUnmount(() => {
   color: $text-muted;
   font-size: 10px;
 }
+
+.history-time {
+  align-self: center;
+  color: $text-muted;
+  font-size: 10px;
+}
+
+.history-summary {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.history-summary span {
+  padding: 7px 10px;
+  border: 1px solid $border-light;
+  border-radius: 999px;
+  color: $text-muted;
+  background: $bg-secondary;
+  font-size: 10px;
+}
+
+.history-summary b { color: $text-primary; }
+.history-messages { padding-top: 14px; }
 
 .task-main {
   min-width: 0;
@@ -1231,6 +1406,63 @@ onBeforeUnmount(() => {
 .workflow-list button {
   strong { display: block; font-size: 12px; }
   span { display: block; margin-top: 4px; color: $text-muted; font-size: 10px; }
+}
+
+.history-section { min-height: 0; }
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 48vh;
+  margin-top: 12px;
+  padding-right: 3px;
+  overflow: auto;
+}
+.rail-history-list { max-height: none; }
+.history-refresh-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+.history-refresh-row > span { color: $text-muted; font-size: 9px; line-height: 1.4; }
+
+.history-row {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  color: $text-primary;
+  background: $bg-card;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color $transition-fast, background $transition-fast;
+}
+
+.history-row:hover { border-color: $border-color; background: $bg-card-hover; }
+.history-row:disabled { cursor: not-allowed; opacity: .55; }
+.history-row.active { border-color: $accent-primary; box-shadow: inset 3px 0 0 $accent-primary; }
+.history-row-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.history-row-top span,
+.history-row-top small { color: $text-muted; font-size: 9px; }
+.history-row strong {
+  display: block;
+  margin-top: 7px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-row p {
+  display: -webkit-box;
+  margin: 5px 0 0;
+  overflow: hidden;
+  color: $text-secondary;
+  font-size: 9px;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 :deep(.create-modal) { width: min(680px, calc(100vw - 32px)); }

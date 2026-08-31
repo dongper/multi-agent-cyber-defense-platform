@@ -1,0 +1,4 @@
+alert_id,occurred_at,source_ip,destination_ip,destination_port,username,asset_id,asset_name,asset_criticality,alert_type,severity,action,rule_name,source_country,failed_login_count,login_succeeded,cve,internet_exposed,threat_intel_score,process_name,command_line,source,raw_event
+UPLOAD-001,2026-08-26T08:00:00Z,198.51.100.88,10.20.5.10,443,,ASSET-UPLOAD-01,上传验收门户,high,Web 异常访问,high,blocked,公网异常访问,境外,0,false,,true,72,nginx,,WAF,首次异常请求
+UPLOAD-002,2026-08-26T08:03:00Z,198.51.100.88,10.20.5.10,443,,ASSET-UPLOAD-01,上传验收门户,high,Web 异常访问,high,blocked,公网异常访问,境外,0,false,,true,72,nginx,,WAF,同指纹重复请求
+UPLOAD-003,2026-08-26T08:20:00Z,10.10.1.19,10.20.6.12,443,monitor-agent,ASSET-UPLOAD-02,内部服务,medium,健康探测,low,allowed,内部监控健康检查,内部,0,true,,false,0,node,,APM,正常健康探测

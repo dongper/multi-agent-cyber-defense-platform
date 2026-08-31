@@ -1,5 +1,6 @@
 import * as hermesCli from '../../services/hermes/hermes-cli'
 import { listSessionSummaries, listSessionSummaryGroups, getUsageStatsFromDb, getSessionDetailFromDb, getSessionDetailFromDbWithProfile, getSessionDetailPaginatedFromDbWithProfile, getExactSessionDetailFromDbWithProfile } from '../../db/hermes/sessions-db'
+import { getConversationDetailFromDb, listConversationSummariesFromDb } from '../../db/hermes/conversations-db'
 import {
   listSessions as localListSessions,
   searchSessions as localSearchSessions,
@@ -388,10 +389,12 @@ function buildImportMessages(sessionId: string, messages: any[]): LocalImportMes
 export async function listConversations(ctx: any) {
   const source = (ctx.query.source as string) || undefined
   const limit = ctx.query.limit ? parseInt(ctx.query.limit as string, 10) : undefined
+  const humanOnly = (ctx.query.humanOnly as string) !== 'false' && ctx.query.humanOnly !== '0'
+  const effectiveLimit = limit && limit > 0 ? limit : 200
 
   const profile = explicitProfileFilter(ctx)
-  const sessions = localListSessions(profile, source, limit && limit > 0 ? limit : 200)
-  const summaries: ConversationSummary[] = sessions.map(s => ({
+  const sessions = localListSessions(profile, source, effectiveLimit)
+  const localSummaries: ConversationSummary[] = sessions.map(s => ({
     id: s.id,
     profile: s.profile || null,
     source: s.source,
@@ -423,6 +426,27 @@ export async function listConversations(ctx: any) {
     is_active: s.ended_at == null && (Date.now() / 1000 - s.last_active) <= 300,
     thread_session_count: 1,
   }))
+
+  const activeProfile = getActiveProfileName()
+  let runtimeSummaries: ConversationSummary[] = []
+  if ((!profile || profile === activeProfile) && canAccessProfile(ctx, activeProfile)) {
+    try {
+      runtimeSummaries = (await listConversationSummariesFromDb({ source, humanOnly, limit: effectiveLimit }))
+        .map(summary => ({ ...summary, profile: activeProfile }))
+    } catch (error) {
+      logger.warn(error, '[sessions] failed to merge runtime conversation history')
+    }
+  }
+
+  const mergedById = new Map<string, ConversationSummary>()
+  for (const summary of localSummaries) mergedById.set(summary.id, summary)
+  for (const summary of runtimeSummaries) {
+    const local = mergedById.get(summary.id)
+    mergedById.set(summary.id, local ? { ...local, ...summary, profile: local.profile || summary.profile } : summary)
+  }
+  const summaries = [...mergedById.values()]
+    .sort((a, b) => b.last_active - a.last_active || b.started_at - a.started_at)
+    .slice(0, effectiveLimit)
   ctx.body = { sessions: filterPendingDeletedConversationSummaries(filterByAllowedProfiles(ctx, summaries)) }
 }
 
@@ -431,6 +455,21 @@ export async function getConversationMessages(ctx: any) {
 
   const detail = localGetSessionDetail(ctx.params.id)
   if (!detail) {
+    const activeProfile = getActiveProfileName()
+    if (!canAccessProfile(ctx, activeProfile)) {
+      ctx.status = 403
+      ctx.body = { error: `Profile "${activeProfile}" is not available for this user` }
+      return
+    }
+    try {
+      const runtimeDetail = await getConversationDetailFromDb(ctx.params.id, { humanOnly })
+      if (runtimeDetail) {
+        ctx.body = runtimeDetail
+        return
+      }
+    } catch (error) {
+      logger.warn(error, '[sessions] failed to read runtime conversation detail')
+    }
     ctx.status = 404
     ctx.body = { error: 'Conversation not found' }
     return

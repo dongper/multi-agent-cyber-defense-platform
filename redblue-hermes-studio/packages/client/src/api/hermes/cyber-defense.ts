@@ -30,3 +30,32 @@ export async function runCyberDefenseChat(
     }),
   })
 }
+
+export interface CyberDefenseWechatReport {
+  batch_name: string
+  generated_at: string
+  source_count: number
+  case_count: number
+  reduction_rate: number
+  confirmed_count: number
+  suspicious_count: number
+  noise_count: number
+  high_risk_cases: Array<{
+    case_id: string
+    priority: string
+    alert_type: string
+    risk_score: number
+    source_ip: string
+    asset_name: string
+  }>
+}
+
+export async function sendCyberDefenseWechatReport(input: {
+  webhook_url: string
+  report: CyberDefenseWechatReport
+}): Promise<{ ok: boolean; delivered_at: string }> {
+  return request('/api/cyber-defense/wechat/report', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}

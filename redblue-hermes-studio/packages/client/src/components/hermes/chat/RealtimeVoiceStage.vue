@@ -151,7 +151,7 @@ const agentDisplayName = computed(() => {
   const session = chatStore.activeSession
   const agent = session?.agent || session?.codingAgentId || 'hermes'
   return {
-    hermes: '安全智能体',
+    hermes: '联通安全智能体',
     claude: 'Claude',
     'claude-code': 'Claude',
     codex: 'Codex',

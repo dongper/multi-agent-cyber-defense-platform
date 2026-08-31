@@ -12028,6 +12028,17 @@
         },
         "parameters": [
           {
+            "name": "humanOnly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "enum": [
+                "0"
+              ]
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,

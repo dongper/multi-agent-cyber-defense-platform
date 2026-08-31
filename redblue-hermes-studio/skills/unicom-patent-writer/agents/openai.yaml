@@ -1,0 +1,4 @@
+interface:
+  display_name: "联通专利交底书助手"
+  short_description: "联通交底书撰写、百度或谷歌检索、公式说明与质量检查"
+  default_prompt: "Use $unicom-patent-writer to draft a China Unicom patent disclosure with verified Baidu or Google prior-art research."

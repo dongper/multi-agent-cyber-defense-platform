@@ -873,7 +873,7 @@ const hiddenDefaultWorkspaces = computed(() => {
 });
 
 const newChatAgentOptions = computed(() => [
-  { label: "安全智能体", value: "hermes" },
+  { label: "联通安全智能体", value: "hermes" },
   { label: "Ekko", value: "ekko-agent" },
   { label: "Claude", value: "claude-code" },
   { label: "Codex", value: "codex" },

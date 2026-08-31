@@ -1,0 +1,1106 @@
+{
+  "source": "/Users/zhangrunmin/.hermes/skills",
+  "copied": true,
+  "migrated": false,
+  "count": 183,
+  "skills": [
+    {
+      "category": "apikey-image-gen",
+      "name": "apikey-image-gen",
+      "path": "apikey-image-gen",
+      "description": "Generate or edit images through Hermes Web UI using the selected/requested profile's fun-codex provider from config.yaml."
+    },
+    {
+      "category": "apple",
+      "name": "apple-notes",
+      "path": "apple/apple-notes",
+      "description": "Manage Apple Notes via memo CLI: create, search, edit."
+    },
+    {
+      "category": "apple",
+      "name": "apple-reminders",
+      "path": "apple/apple-reminders",
+      "description": "Apple Reminders via remindctl: add, list, complete."
+    },
+    {
+      "category": "apple",
+      "name": "findmy",
+      "path": "apple/findmy",
+      "description": "Track Apple devices/AirTags via FindMy.app on macOS."
+    },
+    {
+      "category": "apple",
+      "name": "imessage",
+      "path": "apple/imessage",
+      "description": "Send and receive iMessages/SMS via the imsg CLI on macOS."
+    },
+    {
+      "category": "apple",
+      "name": "macos-computer-use",
+      "path": "apple/macos-computer-use",
+      "description": "|"
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "claude-code",
+      "path": "autonomous-ai-agents/claude-code",
+      "description": "Delegate coding to Claude Code CLI (features, PRs)."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "codex",
+      "path": "autonomous-ai-agents/codex",
+      "description": "Delegate coding to OpenAI Codex CLI (features, PRs)."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "computer-use",
+      "path": "autonomous-ai-agents/computer-use",
+      "description": "Drive the desktop in the background without stealing focus."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "hermes-agent",
+      "path": "autonomous-ai-agents/hermes-agent",
+      "description": "Configure, extend, or contribute to Hermes Agent."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "kanban-codex-lane",
+      "path": "autonomous-ai-agents/kanban-codex-lane",
+      "description": "Use when a Hermes Kanban worker wants to run Codex CLI as an isolated implementation lane while Hermes keeps ownership of task lifecycle, reconciliation, testing, and handoff."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "merge-reconciler",
+      "path": "autonomous-ai-agents/merge-reconciler",
+      "description": "Neutral third-party resolution of agent merge conflicts."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "openclaw",
+      "path": "autonomous-ai-agents/openclaw",
+      "description": "Manage OpenClaw CLI — skills install/search, config fixes, plugin management. OpenClaw is a separate AI agent platform (like Hermes) with its own skills ecosystem (ClawHub)."
+    },
+    {
+      "category": "autonomous-ai-agents",
+      "name": "opencode",
+      "path": "autonomous-ai-agents/opencode",
+      "description": "Delegate coding to OpenCode CLI (features, PR review)."
+    },
+    {
+      "category": "creative",
+      "name": "architecture-diagram",
+      "path": "creative/architecture-diagram",
+      "description": "Dark-themed SVG architecture/cloud/infra diagrams as HTML."
+    },
+    {
+      "category": "creative",
+      "name": "ascii-art",
+      "path": "creative/ascii-art",
+      "description": "ASCII art: pyfiglet, cowsay, boxes, image-to-ascii."
+    },
+    {
+      "category": "creative",
+      "name": "ascii-video",
+      "path": "creative/ascii-video",
+      "description": "ASCII video: convert video/audio to colored ASCII MP4/GIF."
+    },
+    {
+      "category": "creative",
+      "name": "baoyu-article-illustrator",
+      "path": "creative/baoyu-article-illustrator",
+      "description": "Article illustrations: type × style × palette consistency."
+    },
+    {
+      "category": "creative",
+      "name": "baoyu-comic",
+      "path": "creative/baoyu-comic",
+      "description": "Knowledge comics (知识漫画): educational, biography, tutorial."
+    },
+    {
+      "category": "creative",
+      "name": "baoyu-infographic",
+      "path": "creative/baoyu-infographic",
+      "description": "Infographics: 21 layouts x 21 styles (信息图, 可视化)."
+    },
+    {
+      "category": "creative",
+      "name": "bitmap-to-svg",
+      "path": "creative/bitmap-to-svg",
+      "description": "Convert bitmap images (PNG/JPG) to clean SVG vector graphics using OpenCV contour tracing and Bezier curve fitting. Use when the user asks to vectorize, trace, convert-to-SVG, or make a raster image scalable/resolution-independent."
+    },
+    {
+      "category": "creative",
+      "name": "claude-design",
+      "path": "creative/claude-design",
+      "description": "Design one-off HTML artifacts (landing, deck, prototype)."
+    },
+    {
+      "category": "creative",
+      "name": "comfyui",
+      "path": "creative/comfyui",
+      "description": "Generate images, video, and audio with ComfyUI — install, launch, manage nodes/models, run workflows with parameter injection. Uses the official comfy-cli for lifecycle and direct REST/WebSocket API for execution."
+    },
+    {
+      "category": "creative",
+      "name": "design-md",
+      "path": "creative/design-md",
+      "description": "Author/validate/export Google's DESIGN.md token spec files."
+    },
+    {
+      "category": "creative",
+      "name": "excalidraw",
+      "path": "creative/excalidraw",
+      "description": "Hand-drawn Excalidraw JSON diagrams (arch, flow, seq)."
+    },
+    {
+      "category": "creative",
+      "name": "humanizer",
+      "path": "creative/humanizer",
+      "description": "Humanize text: strip AI-isms and add real voice."
+    },
+    {
+      "category": "creative",
+      "name": "ideation",
+      "path": "creative/creative-ideation",
+      "description": "Generate project ideas via creative constraints."
+    },
+    {
+      "category": "creative",
+      "name": "local-short-video-rendering",
+      "path": "creative/local-short-video-rendering",
+      "description": "Render a short vertical video locally from a script/storyboard when full AI video generation tools are unavailable. Uses PIL for frame rendering, macOS `say` for Chinese narration, and ffmpeg for muxing."
+    },
+    {
+      "category": "creative",
+      "name": "manim-video",
+      "path": "creative/manim-video",
+      "description": "Manim CE animations: 3Blue1Brown math/algo videos."
+    },
+    {
+      "category": "creative",
+      "name": "p5js",
+      "path": "creative/p5js",
+      "description": "p5.js sketches: gen art, shaders, interactive, 3D."
+    },
+    {
+      "category": "creative",
+      "name": "pixel-art",
+      "path": "creative/pixel-art",
+      "description": "Pixel art w/ era palettes (NES, Game Boy, PICO-8)."
+    },
+    {
+      "category": "creative",
+      "name": "pixelle-video",
+      "path": "creative/pixelle-video",
+      "description": "Configure and run Pixelle-Video (AIDC-AI) — an AI automated short video generation platform. Covers LLM configuration (any OpenAI-compatible provider), ComfyUI/RunningHub setup, TTS, and template selection. Includes known pitfalls and verif"
+    },
+    {
+      "category": "creative",
+      "name": "popular-web-designs",
+      "path": "creative/popular-web-designs",
+      "description": "54 real design systems (Stripe, Linear, Vercel) as HTML/CSS."
+    },
+    {
+      "category": "creative",
+      "name": "pretext",
+      "path": "creative/pretext",
+      "description": "Use when building creative browser demos with @chenglou/pretext — DOM-free text layout for ASCII art, typographic flow around obstacles, text-as-geometry games, kinetic typography, and text-powered generative art. Produces single-file HTML "
+    },
+    {
+      "category": "creative",
+      "name": "sketch",
+      "path": "creative/sketch",
+      "description": "Throwaway HTML mockups: 2-3 design variants to compare."
+    },
+    {
+      "category": "creative",
+      "name": "songwriting-and-ai-music",
+      "path": "creative/songwriting-and-ai-music",
+      "description": "Songwriting craft and Suno AI music prompts."
+    },
+    {
+      "category": "creative",
+      "name": "touchdesigner-mcp",
+      "path": "creative/touchdesigner-mcp",
+      "description": "Control a running TouchDesigner instance via twozero MCP — create operators, set parameters, wire connections, execute Python, build real-time visuals. 36 native tools."
+    },
+    {
+      "category": "ctf-ai-ml",
+      "name": "ctf-ai-ml",
+      "path": "ctf-ai-ml",
+      "description": "Provides AI and machine learning techniques for CTF challenges. Use when attacking ML models, crafting adversarial examples, performing model extraction, prompt injection, membership inference, training data poisoning, fine-tuning manipulat"
+    },
+    {
+      "category": "ctf-crypto",
+      "name": "ctf-crypto",
+      "path": "ctf-crypto",
+      "description": "Provides cryptography attack techniques for CTF challenges. Use when attacking encryption, hashing, signatures, ZKP, PRNG, or mathematical crypto problems involving RSA, AES, ECC, lattices, LWE, CVP, number theory, Coppersmith, Pollard, Wie"
+    },
+    {
+      "category": "ctf-forensics",
+      "name": "ctf-forensics",
+      "path": "ctf-forensics",
+      "description": "Provides digital forensics and signal analysis techniques for CTF challenges. Use when analyzing disk images, memory dumps, event logs, network captures, cryptocurrency transactions, steganography, PDF analysis, Windows registry, Volatility"
+    },
+    {
+      "category": "ctf-malware",
+      "name": "ctf-malware",
+      "path": "ctf-malware",
+      "description": "Provides malware analysis and network traffic techniques for CTF challenges. Use when analyzing obfuscated scripts, malicious packages, custom crypto protocols, C2 traffic, PE/.NET binaries, RC4/AES encrypted communications, YARA rules, she"
+    },
+    {
+      "category": "ctf-misc",
+      "name": "ctf-misc",
+      "path": "ctf-misc",
+      "description": "Provides miscellaneous CTF challenge techniques for problems that do not cleanly fit the main categories. Use for encoding puzzles, pyjails, bash jails, RF/SDR, DNS oddities, unicode tricks, esoteric languages, QR or audio puzzles, constrai"
+    },
+    {
+      "category": "ctf-osint",
+      "name": "ctf-osint",
+      "path": "ctf-osint",
+      "description": "Provides open source intelligence techniques for CTF challenges. Use when gathering information from public sources, social media, geolocation, DNS records, username enumeration, reverse image search, Google dorking, Wayback Machine, Tor re"
+    },
+    {
+      "category": "ctf-pwn",
+      "name": "ctf-pwn",
+      "path": "ctf-pwn",
+      "description": "Provides binary exploitation techniques for CTF challenges. Use when you already have a vulnerable native target or service and need to turn memory corruption or low-level primitives into code execution or privilege escalation, such as buff"
+    },
+    {
+      "category": "ctf-reverse",
+      "name": "ctf-reverse",
+      "path": "ctf-reverse",
+      "description": "Provides reverse engineering techniques for CTF challenges. Use when the main job is to understand how a compiled, obfuscated, packed, or virtualized target works before exploiting or solving it, including binaries, APKs, WASM, firmware, cu"
+    },
+    {
+      "category": "ctf-solver-claude",
+      "name": "ctf-solver",
+      "path": "ctf-solver-claude",
+      "description": ">"
+    },
+    {
+      "category": "ctf-writeup",
+      "name": "ctf-writeup",
+      "path": "ctf-writeup",
+      "description": "Generates a single standardized submission-style CTF writeup for competition handoff and organizer review. Use after solving a CTF challenge to document the solution steps, tools used, and lessons learned in a structured format."
+    },
+    {
+      "category": "data-science",
+      "name": "jupyter-live-kernel",
+      "path": "data-science/jupyter-live-kernel",
+      "description": "Iterative Python via live Jupyter kernel (hamelnb)."
+    },
+    {
+      "category": "devops",
+      "name": "kanban-orchestrator",
+      "path": "devops/kanban-orchestrator",
+      "description": "Decomposition playbook + anti-temptation rules for an orchestrator profile routing work through Kanban. The \"don't do the work yourself\" rule and the basic lifecycle are auto-injected into every kanban worker's system prompt; this skill is "
+    },
+    {
+      "category": "devops",
+      "name": "kanban-worker",
+      "path": "devops/kanban-worker",
+      "description": "Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper detail"
+    },
+    {
+      "category": "devops",
+      "name": "sdlc-review",
+      "path": "devops/sdlc-review",
+      "description": "Review Kanban handoffs and route verified outcomes."
+    },
+    {
+      "category": "devops",
+      "name": "webhook-subscriptions",
+      "path": "devops/webhook-subscriptions",
+      "description": "Webhook subscriptions: event-driven agent runs."
+    },
+    {
+      "category": "dify-inspection",
+      "name": "dify-inspection",
+      "path": "dify-inspection",
+      "description": "Inspect a self-hosted Dify instance to extract app architecture, model configurations, embedding settings, and dataset retrieval parameters. Combines Docker inspection, UI navigation, and PostgreSQL queries."
+    },
+    {
+      "category": "email",
+      "name": "email-inbox-triage",
+      "path": "email/email-inbox-triage",
+      "description": "Triage an inbox: prioritize threads, draft replies safely."
+    },
+    {
+      "category": "email",
+      "name": "himalaya",
+      "path": "email/himalaya",
+      "description": "Himalaya CLI: IMAP/SMTP email from terminal."
+    },
+    {
+      "category": "gaming",
+      "name": "minecraft-modpack-server",
+      "path": "gaming/minecraft-modpack-server",
+      "description": "Host modded Minecraft servers (CurseForge, Modrinth)."
+    },
+    {
+      "category": "gaming",
+      "name": "pokemon-player",
+      "path": "gaming/pokemon-player",
+      "description": "Play Pokemon via headless emulator + RAM reads."
+    },
+    {
+      "category": "gandalf-ctf",
+      "name": "gandalf-ctf",
+      "path": "gandalf-ctf",
+      "description": ">-"
+    },
+    {
+      "category": "github",
+      "name": "codebase-inspection",
+      "path": "github/codebase-inspection",
+      "description": "Inspect codebases w/ pygount: LOC, languages, ratios."
+    },
+    {
+      "category": "github",
+      "name": "github-auth",
+      "path": "github/github-auth",
+      "description": "GitHub auth setup: HTTPS tokens, SSH keys, gh CLI login."
+    },
+    {
+      "category": "github",
+      "name": "github-code-review",
+      "path": "github/github-code-review",
+      "description": "Review PRs: diffs, inline comments via gh or REST."
+    },
+    {
+      "category": "github",
+      "name": "github-issue-to-pr",
+      "path": "github/github-issue-to-pr",
+      "description": "Carry a GitHub issue to a verified PR with honest CI state."
+    },
+    {
+      "category": "github",
+      "name": "github-issues",
+      "path": "github/github-issues",
+      "description": "Create, triage, label, assign GitHub issues via gh or REST."
+    },
+    {
+      "category": "github",
+      "name": "github-pr-workflow",
+      "path": "github/github-pr-workflow",
+      "description": "GitHub PR lifecycle: branch, commit, open, CI, merge."
+    },
+    {
+      "category": "github",
+      "name": "github-repo-management",
+      "path": "github/github-repo-management",
+      "description": "Clone/create/fork repos; manage remotes, releases."
+    },
+    {
+      "category": "github",
+      "name": "sync-local-folder-to-repo",
+      "path": "github/sync-local-folder-to-repo",
+      "description": "Use when pushing a non-git local folder to an existing repo."
+    },
+    {
+      "category": "grok-image-to-video",
+      "name": "grok-image-to-video",
+      "path": "grok-image-to-video",
+      "description": "Animate a local image into a short mp4 video through Hermes Web UI using xAI Grok Imagine."
+    },
+    {
+      "category": "hermes-config",
+      "name": "hermes-model-management",
+      "path": "hermes-config/hermes-model-management",
+      "description": "Manage Hermes models, providers, and credential pools — adding/removing providers, troubleshooting model visibility in desktop apps and CLI."
+    },
+    {
+      "category": "hermes-config",
+      "name": "hermes-studio-branding",
+      "path": "hermes-config/hermes-studio-branding",
+      "description": "Rebrand Hermes Studio web UI: logo, name, theme, avatars."
+    },
+    {
+      "category": "hermes-config",
+      "name": "hermes-studio-custom-models",
+      "path": "hermes-config/hermes-studio-custom-models",
+      "description": "Add extra models to a custom (non-builtin) provider in Hermes Studio. Use when user adds models to ~/.hermes/config.yaml's custom_providers but they don't appear in Studio's model picker."
+    },
+    {
+      "category": "hyperframes",
+      "name": "hyperframes",
+      "path": "hyperframes",
+      "description": "Create AI videos with HyperFrames in Hermes using HTML, CSS, and JavaScript compositions, then validate and render them to MP4. Use for short video intros, cinematic trailers, product promos, subtitle animations, HUD/tech visuals, web-to-vi"
+    },
+    {
+      "category": "leisure",
+      "name": "find-nearby",
+      "path": "leisure/find-nearby",
+      "description": "Find nearby places (restaurants, cafes, bars, pharmacies, etc.) using OpenStreetMap. Works with coordinates, addresses, cities, zip codes, or Telegram location pins. No API keys needed."
+    },
+    {
+      "category": "markdown-viewer",
+      "name": "markdown-viewer",
+      "path": "markdown-viewer",
+      "description": "Create rich diagrams, data visualizations, technical architecture views, and editorial content cards directly in Markdown using the Markdown Viewer Agent Skills pack. Use for Mermaid-like diagram requests, PlantUML architecture diagrams, Ve"
+    },
+    {
+      "category": "mcp",
+      "name": "mcporter",
+      "path": "mcp/mcporter",
+      "description": "Use the mcporter CLI to list, configure, auth, and call MCP servers/tools directly (HTTP or stdio), including ad-hoc servers, config edits, and CLI/type generation."
+    },
+    {
+      "category": "mcp",
+      "name": "native-mcp",
+      "path": "mcp/native-mcp",
+      "description": "MCP client: connect servers, register tools (stdio/HTTP)."
+    },
+    {
+      "category": "media",
+      "name": "gif-search",
+      "path": "media/gif-search",
+      "description": "Search/download GIFs from Tenor via curl + jq."
+    },
+    {
+      "category": "media",
+      "name": "heartmula",
+      "path": "media/heartmula",
+      "description": "HeartMuLa: Suno-like song generation from lyrics + tags."
+    },
+    {
+      "category": "media",
+      "name": "songsee",
+      "path": "media/songsee",
+      "description": "Audio spectrograms/features (mel, chroma, MFCC) via CLI."
+    },
+    {
+      "category": "media",
+      "name": "spotify",
+      "path": "media/spotify",
+      "description": "Spotify: play, search, queue, manage playlists and devices."
+    },
+    {
+      "category": "media",
+      "name": "youtube-content",
+      "path": "media/youtube-content",
+      "description": "YouTube transcripts to summaries, threads, blogs."
+    },
+    {
+      "category": "minimax-image-to-video",
+      "name": "minimax-image-to-video",
+      "path": "minimax-image-to-video",
+      "description": "Animate an image through Hermes Web UI using the MiniMax image-to-video API."
+    },
+    {
+      "category": "mlops",
+      "name": "audiocraft-audio-generation",
+      "path": "mlops/models/audiocraft",
+      "description": "AudioCraft: MusicGen text-to-music, AudioGen text-to-sound."
+    },
+    {
+      "category": "mlops",
+      "name": "axolotl",
+      "path": "mlops/training/axolotl",
+      "description": "Expert guidance for fine-tuning LLMs with Axolotl - YAML configs, 100+ models, LoRA/QLoRA, DPO/KTO/ORPO/GRPO, multimodal support"
+    },
+    {
+      "category": "mlops",
+      "name": "clip",
+      "path": "mlops/models/clip",
+      "description": "OpenAI's model connecting vision and language. Enables zero-shot image classification, image-text matching, and cross-modal retrieval. Trained on 400M image-text pairs. Use for image search, content moderation, or vision-language tasks with"
+    },
+    {
+      "category": "mlops",
+      "name": "dspy",
+      "path": "mlops/research/dspy",
+      "description": "DSPy: declarative LM programs, auto-optimize prompts, RAG."
+    },
+    {
+      "category": "mlops",
+      "name": "evaluating-llms-harness",
+      "path": "mlops/evaluation/evaluating-llms-harness",
+      "description": "lm-eval-harness: benchmark LLMs (MMLU, GSM8K, etc.)."
+    },
+    {
+      "category": "mlops",
+      "name": "fine-tuning-with-trl",
+      "path": "mlops/training/trl-fine-tuning",
+      "description": "Fine-tune LLMs using reinforcement learning with TRL - SFT for instruction tuning, DPO for preference alignment, PPO/GRPO for reward optimization, and reward model training. Use when need RLHF, align model with preferences, or train from hu"
+    },
+    {
+      "category": "mlops",
+      "name": "gguf-quantization",
+      "path": "mlops/inference/gguf",
+      "description": "GGUF format and llama.cpp quantization for efficient CPU/GPU inference. Use when deploying models on consumer hardware, Apple Silicon, or when needing flexible quantization from 2-8 bit without GPU requirements."
+    },
+    {
+      "category": "mlops",
+      "name": "grpo-rl-training",
+      "path": "mlops/training/grpo-rl-training",
+      "description": "Expert guidance for GRPO/RL fine-tuning with TRL for reasoning and task-specific model training"
+    },
+    {
+      "category": "mlops",
+      "name": "guidance",
+      "path": "mlops/inference/guidance",
+      "description": "Control LLM output with regex and grammars, guarantee valid JSON/XML/code generation, enforce structured formats, and build multi-step workflows with Guidance - Microsoft Research's constrained generation framework"
+    },
+    {
+      "category": "mlops",
+      "name": "huggingface-hub",
+      "path": "mlops/huggingface-hub",
+      "description": "HuggingFace hf CLI: search/download/upload models, datasets."
+    },
+    {
+      "category": "mlops",
+      "name": "llama-cpp",
+      "path": "mlops/inference/llama-cpp",
+      "description": "llama.cpp local GGUF inference + HF Hub model discovery."
+    },
+    {
+      "category": "mlops",
+      "name": "modal-serverless-gpu",
+      "path": "mlops/cloud/modal",
+      "description": "Serverless GPU cloud platform for running ML workloads. Use when you need on-demand GPU access without infrastructure management, deploying ML models as APIs, or running batch jobs with automatic scaling."
+    },
+    {
+      "category": "mlops",
+      "name": "obliteratus",
+      "path": "mlops/inference/obliteratus",
+      "description": "OBLITERATUS: abliterate LLM refusals (diff-in-means)."
+    },
+    {
+      "category": "mlops",
+      "name": "outlines",
+      "path": "mlops/inference/outlines",
+      "description": "Guarantee valid JSON/XML/code structure during generation, use Pydantic models for type-safe outputs, support local models (Transformers, vLLM), and maximize inference speed with Outlines - dottxt.ai's structured generation library"
+    },
+    {
+      "category": "mlops",
+      "name": "peft-fine-tuning",
+      "path": "mlops/training/peft",
+      "description": "Parameter-efficient fine-tuning for LLMs using LoRA, QLoRA, and 25+ methods. Use when fine-tuning large models (7B-70B) with limited GPU memory, when you need to train <1% of parameters with minimal accuracy loss, or for multi-adapter servi"
+    },
+    {
+      "category": "mlops",
+      "name": "pytorch-fsdp",
+      "path": "mlops/training/pytorch-fsdp",
+      "description": "Expert guidance for Fully Sharded Data Parallel training with PyTorch FSDP - parameter sharding, mixed precision, CPU offloading, FSDP2"
+    },
+    {
+      "category": "mlops",
+      "name": "segment-anything-model",
+      "path": "mlops/models/segment-anything",
+      "description": "SAM: zero-shot image segmentation via points, boxes, masks."
+    },
+    {
+      "category": "mlops",
+      "name": "serving-llms-vllm",
+      "path": "mlops/inference/serving-llms-vllm",
+      "description": "vLLM: high-throughput LLM serving, OpenAI API, quantization."
+    },
+    {
+      "category": "mlops",
+      "name": "stable-diffusion-image-generation",
+      "path": "mlops/models/stable-diffusion",
+      "description": "State-of-the-art text-to-image generation with Stable Diffusion models via HuggingFace Diffusers. Use when generating images from text prompts, performing image-to-image translation, inpainting, or building custom diffusion pipelines."
+    },
+    {
+      "category": "mlops",
+      "name": "unsloth",
+      "path": "mlops/training/unsloth",
+      "description": "Expert guidance for fast fine-tuning with Unsloth - 2-5x faster training, 50-80% less memory, LoRA/QLoRA optimization"
+    },
+    {
+      "category": "mlops",
+      "name": "weights-and-biases",
+      "path": "mlops/evaluation/weights-and-biases",
+      "description": "W&B: log ML experiments, sweeps, model registry, dashboards."
+    },
+    {
+      "category": "mlops",
+      "name": "whisper",
+      "path": "mlops/models/whisper",
+      "description": "OpenAI's general-purpose speech recognition model. Supports 99 languages, transcription, translation to English, and language identification. Six model sizes from tiny (39M params) to large (1550M params). Use for speech-to-text, podcast tr"
+    },
+    {
+      "category": "note-taking",
+      "name": "obsidian",
+      "path": "note-taking/obsidian",
+      "description": "Read, search, create, and edit notes in the Obsidian vault."
+    },
+    {
+      "category": "patent-drafting-cn",
+      "name": "patent-drafting-cn",
+      "path": "patent-drafting-cn",
+      "description": "Draft, expand, and search Chinese patents (CNIPA). Includes workflow for expanding brief patent ideas into full documents, and prior art search to assess novelty and find differentiation opportunities."
+    },
+    {
+      "category": "productivity",
+      "name": "airtable",
+      "path": "productivity/airtable",
+      "description": "Airtable REST API via curl. Records CRUD, filters, upserts."
+    },
+    {
+      "category": "productivity",
+      "name": "box",
+      "path": "productivity/box",
+      "description": "Box manages cloud files, sharing, search, and metadata."
+    },
+    {
+      "category": "productivity",
+      "name": "chinese-corporate-documents",
+      "path": "productivity/chinese-corporate-documents",
+      "description": "Create professional Chinese corporate documents — PPTX template filling (述职PPT, annual reports, card-based layouts) and talent application outlines (集团人才申报, strategic alignment, evidence organization). Covers python-pptx/python-docx workflo"
+    },
+    {
+      "category": "productivity",
+      "name": "document-structuring",
+      "path": "productivity/document-structuring",
+      "description": "Reorganize scattered/visual documents (images, PDFs, mixed files) into structured Word documents with TOC, tables, and embedded images. Covers vision-based content analysis and python-docx generation."
+    },
+    {
+      "category": "productivity",
+      "name": "document-to-action-items",
+      "path": "productivity/document-to-action-items",
+      "description": "Extract cited obligations, deadlines, tasks from documents."
+    },
+    {
+      "category": "productivity",
+      "name": "docx",
+      "path": "productivity/docx",
+      "description": "Create, read, edit, template, and review Word .docx files."
+    },
+    {
+      "category": "productivity",
+      "name": "google-workspace",
+      "path": "productivity/google-workspace",
+      "description": "Gmail, Calendar, Drive, Docs, Sheets via gws CLI or Python."
+    },
+    {
+      "category": "productivity",
+      "name": "jingwangbei-paper",
+      "path": "productivity/jingwangbei-paper",
+      "description": "Prepare, check, revise, and package papers for the \"京网杯\" 2026 北京信息通信技术发展论坛 submission. Use when the user mentions 京网杯, 北京通信学会征文, 2026 信息通信技术发展论坛, 京网杯论文, 投稿材料检查, or asks to format/check/fill a 京网杯 paper, summary table, authorization letter, "
+    },
+    {
+      "category": "productivity",
+      "name": "linear",
+      "path": "productivity/linear",
+      "description": "Linear: manage issues, projects, teams via GraphQL + curl."
+    },
+    {
+      "category": "productivity",
+      "name": "local-pdf-bundling",
+      "path": "productivity/local-pdf-bundling",
+      "description": "在本地把多张图片合成 PDF、合并多个 PDF、按分类生成总 PDF/Word，并处理单页 PDF 过小的情况。"
+    },
+    {
+      "category": "productivity",
+      "name": "maps",
+      "path": "productivity/maps",
+      "description": "Geocode, POIs, routes, timezones via OpenStreetMap/OSRM."
+    },
+    {
+      "category": "productivity",
+      "name": "meeting-action-items",
+      "path": "productivity/meeting-action-items",
+      "description": "Turn meeting notes into cited decisions, owners, tickets."
+    },
+    {
+      "category": "productivity",
+      "name": "nano-pdf",
+      "path": "productivity/nano-pdf",
+      "description": "Edit PDF text/typos/titles via nano-pdf CLI (NL prompts)."
+    },
+    {
+      "category": "productivity",
+      "name": "notion",
+      "path": "productivity/notion",
+      "description": "Notion API + ntn CLI: pages, databases, markdown, Workers."
+    },
+    {
+      "category": "productivity",
+      "name": "ocr-and-documents",
+      "path": "productivity/ocr-and-documents",
+      "description": "Extract text from PDFs/scans (pymupdf, marker-pdf)."
+    },
+    {
+      "category": "productivity",
+      "name": "pdf",
+      "path": "productivity/pdf",
+      "description": "Create, read, merge, fill, and secure PDF files."
+    },
+    {
+      "category": "productivity",
+      "name": "powerpoint",
+      "path": "productivity/powerpoint",
+      "description": "Create, read, edit .pptx decks, slides, notes, templates."
+    },
+    {
+      "category": "productivity",
+      "name": "product-price-monitor",
+      "path": "productivity/product-price-monitor",
+      "description": "Watch product, flight, or listing prices; alert on target."
+    },
+    {
+      "category": "productivity",
+      "name": "session-librarian",
+      "path": "productivity/session-librarian",
+      "description": "Organize sessions by prompt: find, rename, archive, prune."
+    },
+    {
+      "category": "productivity",
+      "name": "teams-meeting-pipeline",
+      "path": "productivity/teams-meeting-pipeline",
+      "description": "Operate the Teams meeting summary pipeline via Hermes CLI — summarize meetings, inspect pipeline status, replay jobs, manage Microsoft Graph subscriptions."
+    },
+    {
+      "category": "productivity",
+      "name": "weekly-review-planning",
+      "path": "productivity/weekly-review-planning",
+      "description": "Weekly reset: commitments, stalled work, next-week plan."
+    },
+    {
+      "category": "productivity",
+      "name": "xlsx",
+      "path": "productivity/xlsx",
+      "description": "Create, read, edit Excel .xlsx workbooks and CSVs."
+    },
+    {
+      "category": "red-teaming",
+      "name": "godmode",
+      "path": "red-teaming/godmode",
+      "description": "Jailbreak LLMs: Parseltongue, GODMODE, ULTRAPLINIAN."
+    },
+    {
+      "category": "remotion",
+      "name": "remotion",
+      "path": "remotion",
+      "description": "Create editable AI video projects with Remotion and React, then preview and render them to MP4. Use for vertical short videos, product demos, story-driven animations, HUD/tech visuals, feed ads, tutorial videos, subtitles, voiceover, sound "
+    },
+    {
+      "category": "research",
+      "name": "arxiv",
+      "path": "research/arxiv",
+      "description": "Search arXiv papers by keyword, author, category, or ID."
+    },
+    {
+      "category": "research",
+      "name": "blocked-page-recovery",
+      "path": "research/blocked-page-recovery",
+      "description": "Recover blocked/paywalled/WAF'd pages via fallbacks."
+    },
+    {
+      "category": "research",
+      "name": "blogwatcher",
+      "path": "research/blogwatcher",
+      "description": "Monitor blogs and RSS/Atom feeds via blogwatcher-cli tool."
+    },
+    {
+      "category": "research",
+      "name": "competitor-news-monitor",
+      "path": "research/competitor-news-monitor",
+      "description": "Watch named companies for material news; cited digests."
+    },
+    {
+      "category": "research",
+      "name": "grounded-citations",
+      "path": "research/grounded-citations",
+      "description": "Ground answers and documents in cited, verifiable sources."
+    },
+    {
+      "category": "research",
+      "name": "llm-wiki",
+      "path": "research/llm-wiki",
+      "description": "Karpathy's LLM Wiki: build/query interlinked markdown KB."
+    },
+    {
+      "category": "research",
+      "name": "polymarket",
+      "path": "research/polymarket",
+      "description": "Query Polymarket: markets, prices, orderbooks, history."
+    },
+    {
+      "category": "research",
+      "name": "research-paper-writing",
+      "path": "research/research-paper-writing",
+      "description": "Write ML papers for NeurIPS/ICML/ICLR: design→submit."
+    },
+    {
+      "category": "research-writing",
+      "name": "brainstorming-research",
+      "path": "research-writing/skills/brainstorming-research",
+      "description": "Use before writing any paper - clarifies paper type, discipline, topic, methodology, and chapter structure through natural dialogue"
+    },
+    {
+      "category": "research-writing",
+      "name": "environment-setup",
+      "path": "research-writing/skills/environment-setup",
+      "description": "Use when Python environment setup is needed for data visualization or conda installation is required"
+    },
+    {
+      "category": "research-writing",
+      "name": "evidence-driven-writing",
+      "path": "research-writing/skills/evidence-driven-writing",
+      "description": "Use when writing or revising Introduction, Related Work, background, literature synthesis, or any section where references must drive claims"
+    },
+    {
+      "category": "research-writing",
+      "name": "experiment-results-planning",
+      "path": "research-writing/skills/experiment-results-planning",
+      "description": "Use when designing experiments, result tables, mock planning data, evaluation protocols, or results sections before real data are final"
+    },
+    {
+      "category": "research-writing",
+      "name": "figures-diagram",
+      "path": "research-writing/skills/figures-diagram",
+      "description": "Use when creating flowcharts, architecture diagrams, or conceptual diagrams - generates prompts for image AI"
+    },
+    {
+      "category": "research-writing",
+      "name": "figures-python",
+      "path": "research-writing/skills/figures-python",
+      "description": "Use when creating data visualizations for papers - generates publication-quality plots with top-journal color schemes"
+    },
+    {
+      "category": "research-writing",
+      "name": "latex-output",
+      "path": "research-writing/skills/latex-output",
+      "description": "Use when user requests LaTeX format output or has provided school/journal LaTeX templates"
+    },
+    {
+      "category": "research-writing",
+      "name": "literature-review",
+      "path": "research-writing/skills/literature-review",
+      "description": "Use when writing literature review sections - guides searching, organizing, and synthesizing academic sources"
+    },
+    {
+      "category": "research-writing",
+      "name": "paper-orchestration",
+      "path": "research-writing/skills/paper-orchestration",
+      "description": "Use when a research-writing task spans multiple sections, medium-sized revisions, full-paper drafting, or repeated quality failures"
+    },
+    {
+      "category": "research-writing",
+      "name": "peer-review",
+      "path": "research-writing/skills/peer-review",
+      "description": "Use before submission or when reviewing papers - provides evaluation checklists, bias detection, and self-review templates"
+    },
+    {
+      "category": "research-writing",
+      "name": "prompts-collection",
+      "path": "research-writing/skills/prompts-collection",
+      "description": "Use for translation, polishing, or de-AI-ification of academic text - provides ready-to-use prompt templates"
+    },
+    {
+      "category": "research-writing",
+      "name": "research-writing-assistant",
+      "path": "research-writing",
+      "description": "Use when writing academic papers, theses, or research articles - supports brainstorming, chapter writing, literature review, and LaTeX output"
+    },
+    {
+      "category": "research-writing",
+      "name": "statistical-analysis",
+      "path": "research-writing/skills/statistical-analysis",
+      "description": "Use when planning or reporting statistical analysis - provides test selection, execution code, and APA format guidelines"
+    },
+    {
+      "category": "research-writing",
+      "name": "using-research-writing",
+      "path": "research-writing/skills/using-research-writing",
+      "description": "Use when starting any research writing task - establishes workflow and routes to appropriate skills"
+    },
+    {
+      "category": "research-writing",
+      "name": "verification",
+      "path": "research-writing/skills/verification",
+      "description": "Use when about to claim work is complete, a chapter is finished, or references are verified - requires running verification commands and confirming output before making any success claims"
+    },
+    {
+      "category": "research-writing",
+      "name": "writing-chapters",
+      "path": "research-writing/skills/writing-chapters",
+      "description": "Use when writing paper chapters - requires completed brainstorming, writes one chapter at a time with user confirmation"
+    },
+    {
+      "category": "research-writing",
+      "name": "writing-core",
+      "path": "research-writing/skills/writing-core",
+      "description": "Use when writing or revising academic papers, especially Chinese journal manuscripts, that need natural prose, de-AI-ification, Markdown formatting, or quality checks"
+    },
+    {
+      "category": "research-writing",
+      "name": "writing-humanities",
+      "path": "research-writing/skills/writing-humanities",
+      "description": "Use when writing humanities or social science papers - provides discipline-specific writing guidance"
+    },
+    {
+      "category": "research-writing",
+      "name": "writing-law",
+      "path": "research-writing/skills/writing-law",
+      "description": "Use when writing law papers - provides legal writing conventions, citation formats, and argumentation guidance"
+    },
+    {
+      "category": "research-writing",
+      "name": "writing-medical",
+      "path": "research-writing/skills/writing-medical",
+      "description": "Use when writing medical, biological, or clinical research papers - provides IMRaD structure and reporting guidelines"
+    },
+    {
+      "category": "security",
+      "name": "ctf-hub",
+      "path": "security/ctf-hub",
+      "description": ">"
+    },
+    {
+      "category": "security",
+      "name": "ctf-offline-solver",
+      "path": "security/ctf-offline-solver",
+      "description": "离线CTF解题专用skill，为本地小模型优化。结构化、步骤明确、不依赖模型自行判断。用户说\"做CTF\"\"解题\"\"分析这道题\"时使用。"
+    },
+    {
+      "category": "security",
+      "name": "ctf-web",
+      "path": "security/ctf-web",
+      "description": "Provides web exploitation techniques for CTF challenges. Use when the target is primarily an HTTP application, API, browser client, template engine, identity flow, or smart-contract frontend/backend surface, including XSS, SQLi, SSTI, SSRF,"
+    },
+    {
+      "category": "security",
+      "name": "web-security-assessment",
+      "path": "security/web-security-assessment",
+      "description": "Basic web security assessment using CLI tools — HTTP headers, SSL, WAF detection, path enumeration, JS analysis, port checks. Use when the user asks to scan, audit, check, or assess a website/domain for vulnerabilities or security issues (N"
+    },
+    {
+      "category": "smart-home",
+      "name": "openhue",
+      "path": "smart-home/openhue",
+      "description": "Control Philips Hue lights, scenes, rooms via OpenHue CLI."
+    },
+    {
+      "category": "social-media",
+      "name": "xitter",
+      "path": "social-media/xitter",
+      "description": "Interact with X/Twitter via the x-cli terminal client using official X API credentials. Use for posting, reading timelines, searching tweets, liking, retweeting, bookmarks, mentions, and user lookups."
+    },
+    {
+      "category": "social-media",
+      "name": "xurl",
+      "path": "social-media/xurl",
+      "description": "X/Twitter via xurl CLI: post, search, DM, media, v2 API."
+    },
+    {
+      "category": "software-development",
+      "name": "debugging-hermes-tui-commands",
+      "path": "software-development/debugging-hermes-tui-commands",
+      "description": "Debug Hermes TUI slash commands: Python, gateway, Ink UI."
+    },
+    {
+      "category": "software-development",
+      "name": "dogfood",
+      "path": "software-development/dogfood",
+      "description": "Exploratory QA of web apps: find bugs, evidence, reports."
+    },
+    {
+      "category": "software-development",
+      "name": "hermes-agent-skill-authoring",
+      "path": "software-development/hermes-agent-skill-authoring",
+      "description": "Author in-repo SKILL.md: frontmatter, validator, structure."
+    },
+    {
+      "category": "software-development",
+      "name": "hermes-s6-container-supervision",
+      "path": "software-development/hermes-s6-container-supervision",
+      "description": "Modify, debug, or extend the s6-overlay supervision tree inside the Hermes Agent Docker image — adding new services, debugging profile gateways, understanding the Architecture B main-program pattern."
+    },
+    {
+      "category": "software-development",
+      "name": "inspecting-hermes-desktop-dom",
+      "path": "software-development/inspecting-hermes-desktop-dom",
+      "description": "Read the live Hermes desktop DOM/CSS over CDP."
+    },
+    {
+      "category": "software-development",
+      "name": "node-inspect-debugger",
+      "path": "software-development/node-inspect-debugger",
+      "description": "Debug Node.js via --inspect + Chrome DevTools Protocol CLI."
+    },
+    {
+      "category": "software-development",
+      "name": "plan",
+      "path": "software-development/plan",
+      "description": "Plan mode: write markdown plan to .hermes/plans/, no exec."
+    },
+    {
+      "category": "software-development",
+      "name": "python-debugpy",
+      "path": "software-development/python-debugpy",
+      "description": "Debug Python: pdb REPL + debugpy remote (DAP)."
+    },
+    {
+      "category": "software-development",
+      "name": "requesting-code-review",
+      "path": "software-development/requesting-code-review",
+      "description": "Pre-commit review: security scan, quality gates, auto-fix."
+    },
+    {
+      "category": "software-development",
+      "name": "simplify-code",
+      "path": "software-development/simplify-code",
+      "description": "Parallel 4-agent cleanup of recent code changes."
+    },
+    {
+      "category": "software-development",
+      "name": "spike",
+      "path": "software-development/spike",
+      "description": "Throwaway experiments to validate an idea before build."
+    },
+    {
+      "category": "software-development",
+      "name": "subagent-driven-development",
+      "path": "software-development/subagent-driven-development",
+      "description": "Execute plans via delegate_task subagents (2-stage review)."
+    },
+    {
+      "category": "software-development",
+      "name": "systematic-debugging",
+      "path": "software-development/systematic-debugging",
+      "description": "4-phase root cause debugging: understand bugs before fixing."
+    },
+    {
+      "category": "software-development",
+      "name": "test-driven-development",
+      "path": "software-development/test-driven-development",
+      "description": "TDD: enforce RED-GREEN-REFACTOR, tests before code."
+    },
+    {
+      "category": "software-development",
+      "name": "web-app-rebranding",
+      "path": "software-development/web-app-rebranding",
+      "description": "Rebrand an existing web app (logo, brand name, theme color)."
+    },
+    {
+      "category": "software-development",
+      "name": "writing-plans",
+      "path": "software-development/writing-plans",
+      "description": "Write implementation plans: bite-sized tasks, paths, code."
+    },
+    {
+      "category": "solve-challenge",
+      "name": "solve-challenge",
+      "path": "solve-challenge",
+      "description": "Solves CTF challenges by performing first-pass triage, identifying the dominant category, and routing execution to the right specialized ctf-* skill. Use when the user gives you a challenge bundle, a remote service, a suspicious file, or on"
+    },
+    {
+      "category": "unicom-patent-writer",
+      "name": "unicom-patent-writer",
+      "path": "unicom-patent-writer",
+      "description": "撰写、补全、检查和修订中国联通发明或实用新型技术交底书及检索报告。用户提到中国联通、联通专利、联通技术交底书、联通专利模板、科技创新平台专利材料、专利检索报告，或要求把论文、项目方案、技术文档整理为联通交底书时使用；支持百度、百度学术、Google、Google Scholar、Google Patents 等公开检索，覆盖技术方案公式化说明、关键保护点、替代方案、落地可能性、可选附图和 DOCX 模板填写。"
+    },
+    {
+      "category": "yuanbao",
+      "name": "yuanbao",
+      "path": "yuanbao",
+      "description": "Yuanbao (元宝) groups: @mention users, query info/members."
+    }
+  ]
+}

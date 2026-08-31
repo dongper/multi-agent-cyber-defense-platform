@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import thinkingImage from '@/assets/thinking.gif'
 
 const props = defineProps<{
   reasoning?: string | null
@@ -66,12 +65,16 @@ onBeforeUnmount(() => cancelAnimationFrame(scrollFrame))
 <template>
   <div class="live-reasoning-status">
     <div class="thinking-status">
-      <img
-        :src="thinkingImage"
-        alt=""
-        aria-hidden="true"
-        class="thinking-avatar"
-      >
+      <div class="thinking-avatar" aria-hidden="true">
+        <svg viewBox="0 0 40 40" focusable="false">
+          <rect x="1" y="1" width="38" height="38" rx="11" />
+          <path d="M11 13h6.5c4 0 6.5 2.4 6.5 6v2c0 3.6-2.5 6-6.5 6H15" />
+          <path d="M29 27h-6.5c-4 0-6.5-2.4-6.5-6v-2c0-3.6 2.5-6 6.5-6H25" />
+          <circle cx="10" cy="13" r="1.5" />
+          <circle cx="30" cy="27" r="1.5" />
+        </svg>
+        <span>联通</span>
+      </div>
       <div class="thinking-status-copy">
         <span class="thinking-status-label">{{ t('chat.thinkingInProgress') }}</span>
         <span class="thinking-status-time">{{ elapsed }}</span>
@@ -122,14 +125,51 @@ onBeforeUnmount(() => cancelAnimationFrame(scrollFrame))
 }
 
 .thinking-avatar {
+  position: relative;
   width: 40px;
   height: 40px;
-  border-radius: $radius-md;
-  object-fit: cover;
   flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #ef2434, #c90016);
+  box-shadow: 0 5px 14px rgba(218, 0, 28, 0.2);
 
-  .dark & {
-    filter: brightness(1.18) contrast(1.08) saturate(1.08);
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+
+    rect {
+      fill: transparent;
+      stroke: rgba(255, 255, 255, 0.28);
+    }
+
+    path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.95);
+      stroke-width: 2.3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    circle {
+      fill: #fff;
+    }
+  }
+
+  span {
+    position: absolute;
+    right: 4px;
+    bottom: 3px;
+    padding: 1px 3px;
+    border-radius: 3px;
+    color: #d6001c;
+    background: rgba(255, 255, 255, 0.94);
+    font-size: 6px;
+    font-weight: 800;
+    letter-spacing: -.05em;
+    line-height: 1.2;
   }
 }
 

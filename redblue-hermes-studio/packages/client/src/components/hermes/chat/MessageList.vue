@@ -178,7 +178,7 @@ const emptyState = computed(() => {
   return {
     logo: agent.src,
     alt: agent.label,
-    text: agent.label === "安全智能体"
+    text: agent.label === "联通安全智能体"
       ? t("chat.emptyState")
       : t("chat.emptyStateAgent", { agent: agent.label }),
   };

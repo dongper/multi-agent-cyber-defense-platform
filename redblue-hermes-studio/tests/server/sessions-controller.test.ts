@@ -181,7 +181,9 @@ describe('session conversations controller', () => {
   beforeEach(() => {
     vi.resetModules()
     listConversationSummariesFromDbMock.mockReset()
+    listConversationSummariesFromDbMock.mockResolvedValue([])
     getConversationDetailFromDbMock.mockReset()
+    getConversationDetailFromDbMock.mockResolvedValue(null)
     listConversationSummariesMock.mockReset()
     getConversationDetailMock.mockReset()
     listSessionSummariesMock.mockReset()
@@ -281,6 +283,30 @@ describe('session conversations controller', () => {
     expect(localListSessionsMock).toHaveBeenCalledWith(undefined, undefined, 5)
     expect(listConversationSummariesMock).not.toHaveBeenCalled()
     expect(ctx.body.sessions[0]).toMatchObject({ id: 'local-conversation', source: 'cli', title: 'Local' })
+  })
+
+  it('merges conversations from the runtime state database with local task sessions', async () => {
+    localListSessionsMock.mockReturnValue([{
+      id: 'task-session', profile: 'default', source: 'cli', model: 'gpt-5', title: 'Task',
+      started_at: 10, ended_at: null, last_active: 10, message_count: 2, tool_call_count: 0,
+      input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0,
+      reasoning_tokens: 0, billing_provider: null, estimated_cost_usd: 0, actual_cost_usd: null,
+      cost_status: '', preview: 'task', workspace: null,
+    }])
+    listConversationSummariesFromDbMock.mockResolvedValue([{
+      id: 'runtime-chat', source: 'cli', model: 'gpt-5', title: '智能助手服务介绍',
+      started_at: 20, ended_at: 21, last_active: 21, message_count: 2, tool_call_count: 0,
+      input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_write_tokens: 0,
+      reasoning_tokens: 0, billing_provider: null, estimated_cost_usd: 0, actual_cost_usd: null,
+      cost_status: '', preview: '你是谁', is_active: false, thread_session_count: 1,
+    }])
+
+    const mod = await import('../../packages/server/src/controllers/hermes/sessions')
+    const ctx: any = { query: { humanOnly: 'true', limit: '100' }, state: { user: { role: 'super_admin' } }, body: null }
+    await mod.listConversations(ctx)
+
+    expect(listConversationSummariesFromDbMock).toHaveBeenCalledWith({ source: undefined, humanOnly: true, limit: 100 })
+    expect(ctx.body.sessions.map((item: any) => item.id)).toEqual(['runtime-chat', 'task-session'])
   })
 
   it('serves bounded workspace preview bytes and blocks traversal, escaped links, and unauthorized profiles', async () => {
@@ -1488,6 +1514,23 @@ describe('session conversations controller', () => {
 
     expect(ctx.status).toBe(404)
     expect(ctx.body).toEqual({ error: 'Conversation not found' })
+  })
+
+  it('reads conversation messages from the runtime state database when the local copy is missing', async () => {
+    localGetSessionDetailMock.mockReturnValue(null)
+    getConversationDetailFromDbMock.mockResolvedValue({
+      session_id: 'runtime-chat',
+      messages: [{ id: 1, session_id: 'runtime-chat', role: 'user', content: '你是谁', timestamp: 1 }],
+      visible_count: 1,
+      thread_session_count: 1,
+    })
+
+    const mod = await import('../../packages/server/src/controllers/hermes/sessions')
+    const ctx: any = { params: { id: 'runtime-chat' }, query: { humanOnly: 'true' }, state: { user: { role: 'super_admin' } }, body: null }
+    await mod.getConversationMessages(ctx)
+
+    expect(getConversationDetailFromDbMock).toHaveBeenCalledWith('runtime-chat', { humanOnly: true })
+    expect(ctx.body.messages[0]).toMatchObject({ content: '你是谁' })
   })
 
   it('prefers local session detail for Hermes history detail when available', async () => {

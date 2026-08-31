@@ -1,5 +1,5 @@
 export interface ChatAgentAvatar {
-  label: '安全智能体' | 'Ekko' | 'Claude' | 'Codex' | 'Pi'
+  label: '联通安全智能体' | 'Ekko' | 'Claude' | 'Codex' | 'Pi'
   src: string
 }
 
@@ -10,7 +10,7 @@ interface ChatAgentSessionIdentity {
 }
 
 const AGENT_AVATARS = {
-  hermes: { label: '安全智能体', src: '/coding-agents/hermes.png' },
+  hermes: { label: '联通安全智能体', src: '/coding-agents/hermes.png' },
   'ekko-agent': { label: 'Ekko', src: '/coding-agents/ekko-agent.png' },
   'claude-code': { label: 'Claude', src: '/coding-agents/claude-code.svg' },
   codex: { label: 'Codex', src: '/coding-agents/codex-openai.png' },

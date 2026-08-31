@@ -109,8 +109,8 @@ function presentationText(value: string, compactUserPrompt = false): string {
   }
   return text
     .replace(/Hermes Studio/gi, '红蓝协同智能安全运营平台')
-    .replace(/Hermes Agent/gi, '安全智能体')
-    .replace(/Hermes/gi, '安全智能体')
+    .replace(/Hermes Agent/gi, '联通安全智能体')
+    .replace(/Hermes/gi, '联通安全智能体')
 }
 
 function imageNameFromDataUrl(url: string, index: number): string {

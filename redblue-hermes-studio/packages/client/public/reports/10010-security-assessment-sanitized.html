@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>10010.com 安全评估报告（脱敏版）</title>
+  <style>
+    :root{--bg:#06111a;--panel:#0a1c29;--panel2:#0d2433;--line:#1b3c50;--text:#e6f0f5;--muted:#7791a2;--cyan:#49c8db;--blue:#4d94ed;--red:#db5b6b;--amber:#d6a64d;--green:#4bc89a;--shadow:0 22px 60px rgba(0,0,0,.32)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0,rgba(38,117,163,.14),transparent 30%),var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.7}
+    a{color:inherit}.shell{width:min(1220px,calc(100% - 36px));margin:0 auto;padding:32px 0 80px}.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;color:#638296;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em}.brand{display:flex;align-items:center;gap:10px}.brand i{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(75,200,154,.09)}
+    .hero{position:relative;min-height:360px;display:grid;grid-template-columns:minmax(0,1fr) 270px;align-items:center;gap:48px;padding:48px;border:1px solid #284c61;border-radius:22px;overflow:hidden;background:radial-gradient(circle at 82% 18%,rgba(219,91,107,.18),transparent 25%),linear-gradient(135deg,#112a3b,#081823 72%);box-shadow:var(--shadow)}.hero:before{position:absolute;inset:0 auto 0 0;width:5px;content:"";background:linear-gradient(var(--red),var(--cyan))}.hero:after{position:absolute;right:-60px;bottom:-150px;width:380px;height:380px;border:1px solid rgba(92,176,210,.1);border-radius:50%;content:"";box-shadow:0 0 0 52px rgba(92,176,210,.025),0 0 0 104px rgba(92,176,210,.015)}.hero-copy,.risk-orbit{position:relative;z-index:1}.eyebrow{color:#61b4ca;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em}.tags{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.tag{padding:5px 10px;border:1px solid #34586c;border-radius:999px;color:#8eb1c3;font-size:11px;background:rgba(7,24,35,.58)}.tag.red{border-color:#72404a;color:#ed8490;background:rgba(123,38,51,.18)}h1{max-width:760px;margin:10px 0 14px;font-size:40px;line-height:1.18;letter-spacing:-.045em}.lead{max-width:760px;margin:0;color:#91a9b8;font-size:15px}.meta{display:flex;flex-wrap:wrap;gap:22px;margin-top:24px;color:#617f92;font-size:12px}.meta b{margin-left:5px;color:#b2c7d2}.risk-orbit{width:220px;aspect-ratio:1;display:grid;place-items:center;border:1px solid #783e49;border-radius:50%;background:radial-gradient(circle,#1a2934 0 43%,#0a1923 44%);box-shadow:0 0 0 12px rgba(219,91,107,.08),0 20px 45px rgba(0,0,0,.3)}.risk-orbit:before{position:absolute;inset:15px;border:1px dashed rgba(236,111,126,.3);border-radius:50%;content:""}.risk-orbit div{text-align:center}.risk-orbit small,.risk-orbit b,.risk-orbit span{display:block}.risk-orbit small{color:#8f6871;font:9px ui-monospace,monospace;letter-spacing:.16em}.risk-orbit b{margin:2px 0;color:#f7e8ea;font:46px ui-monospace,monospace}.risk-orbit span{color:#d97784;font-weight:700}
+    .notice{display:grid;grid-template-columns:auto 1fr;gap:14px;margin:18px 0;padding:16px 18px;border:1px solid #5b4a2d;border-radius:12px;background:rgba(83,61,24,.2);color:#bda671}.notice b{color:#e4c876}.notice i{width:28px;height:28px;display:grid;place-items:center;border:1px solid #7a6131;border-radius:8px;font-style:normal}
+    .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:18px 0}.kpi{padding:17px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(145deg,var(--panel2),#081722)}.kpi small,.kpi b,.kpi span{display:block}.kpi small{color:#658398;font-size:11px}.kpi b{margin:4px 0;color:#edf5f8;font:28px ui-monospace,SFMono-Regular,Menlo,monospace}.kpi span{color:#587488;font-size:11px}.kpi.critical{border-color:#663944}.kpi.critical b{color:#e56b79}.kpi.high b{color:#e98c70}.kpi.medium b{color:#dbb363}.kpi.low b{color:#70abc8}
+    .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.65fr);gap:16px;margin:16px 0}.panel{border:1px solid var(--line);border-radius:14px;background:linear-gradient(150deg,var(--panel),#071722);box-shadow:0 12px 30px rgba(0,0,0,.12)}.panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}.panel-head small{display:block;color:#4d91a9;font:9px ui-monospace,monospace;letter-spacing:.14em}.panel-head h2{margin:2px 0 0;font-size:17px}.panel-head span{color:#58778a;font-size:11px}.panel-body{padding:20px}.panel-body p{margin:0 0 12px;color:#8ba2b1}.panel-body p:last-child{margin-bottom:0}.summary-lead{color:#d9e7ed!important;font-size:16px}.scope{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}.scope article{padding:12px;border:1px solid #1d3d50;border-radius:9px;background:#081722}.scope small,.scope b{display:block}.scope small{color:#537589;font-size:10px}.scope b{margin-top:4px;color:#b7cbd6;font-size:12px}.distribution{display:grid;gap:13px}.bar-row{display:grid;grid-template-columns:44px 1fr 26px;align-items:center;gap:10px;color:#7590a1;font-size:11px}.bar{height:8px;border-radius:99px;background:#122a3a;overflow:hidden}.bar i{height:100%;display:block;border-radius:inherit}.bar-row.critical i{background:var(--red)}.bar-row.high i{background:#e17d65}.bar-row.medium i{background:var(--amber)}.bar-row.low i{background:#5c9bc1}.bar-row.info i{background:#506c80}
+    .section{margin-top:18px}.section-title{display:flex;align-items:flex-end;justify-content:space-between;margin:0 0 12px;padding:0 2px}.section-title small{color:#4d91a9;font:9px ui-monospace,monospace;letter-spacing:.14em}.section-title h2{margin:3px 0 0;font-size:20px}.section-title span{color:#58778a;font-size:11px}.top-findings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.finding-card{position:relative;min-height:180px;padding:18px;border:1px solid #25485c;border-radius:13px;background:linear-gradient(150deg,#0d2534,#081722)}.finding-card:before{position:absolute;inset:0 auto 0 0;width:3px;border-radius:13px 0 0 13px;content:"";background:var(--red)}.finding-card.high:before{background:#e17d65}.finding-card.medium:before{background:var(--amber)}.finding-card header{display:flex;align-items:center;justify-content:space-between;gap:12px}.badge{padding:3px 8px;border:1px solid #71404a;border-radius:999px;color:#df7480;font-size:9px}.finding-card.high .badge{border-color:#705044;color:#df927a}.finding-card.medium .badge{border-color:#655431;color:#d9b566}.finding-card h3{margin:14px 0 8px;font-size:14px}.finding-card p{margin:0;color:#7690a2;font-size:12px}.finding-card footer{margin-top:14px;color:#506f82;font-size:10px}
+    .roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.phase{padding:18px;border:1px solid var(--line);border-radius:13px;background:#081722}.phase>small{color:#4e90a8;font:9px ui-monospace,monospace;letter-spacing:.14em}.phase h3{margin:5px 0 12px;font-size:15px}.phase ul{margin:0;padding:0;list-style:none}.phase li{position:relative;margin:9px 0;padding-left:16px;color:#7892a3;font-size:12px}.phase li:before{position:absolute;top:.72em;left:0;width:5px;height:5px;border-radius:50%;content:"";background:var(--cyan)}.phase.p0{border-color:#5e343e}.phase.p0 li:before{background:var(--red)}.phase.p1{border-color:#5c4b2c}.phase.p1 li:before{background:var(--amber)}
+    .findings-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}.findings-table th{position:sticky;top:0;padding:11px 12px;border-bottom:1px solid #2a4b5e;color:#6c8ca0;background:#0d2635;text-align:left;font-size:10px;letter-spacing:.05em}.findings-table td{padding:12px;border-bottom:1px solid #173547;color:#7993a4;vertical-align:top}.findings-table tr:last-child td{border-bottom:0}.findings-table td:first-child{width:44px;color:#4e7388;font-family:ui-monospace,monospace}.findings-table td:nth-child(2){width:74px}.findings-table b{color:#bdd0da}.sev{display:inline-block;min-width:48px;padding:3px 7px;border-radius:5px;text-align:center;font-size:9px}.sev.critical{color:#f08491;background:rgba(219,91,107,.13)}.sev.high{color:#e9a089;background:rgba(225,125,101,.13)}.sev.medium{color:#dfbd72;background:rgba(214,166,77,.13)}.sev.low{color:#78afd0;background:rgba(92,155,193,.13)}.sev.info{color:#7993a4;background:rgba(80,108,128,.16)}
+    .method{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.method article{padding:14px;border:1px solid #1d3b4d;border-radius:10px;background:#081722}.method b,.method span{display:block}.method b{font-size:12px}.method span{margin-top:5px;color:#668397;font-size:11px}.footer{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:18px;border-top:1px solid #173447;color:#557487;font-size:11px}.footer b{color:#8ca7b7}
+    @media(max-width:950px){.hero{grid-template-columns:1fr;padding:34px}.risk-orbit{width:170px}.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}.top-findings,.roadmap{grid-template-columns:1fr}.method{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:620px){.shell{width:min(100% - 22px,1220px);padding-top:16px}.topbar{align-items:flex-start;flex-direction:column;gap:8px}.hero{padding:25px 22px;border-radius:16px}h1{font-size:30px}.risk-orbit{width:140px}.kpis{grid-template-columns:repeat(2,1fr)}.scope,.method{grid-template-columns:1fr}.findings-table{min-width:720px}.table-scroll{overflow:auto}.footer{align-items:flex-start;flex-direction:column;gap:6px}}
+    @media print{body{background:#fff;color:#18232b}.shell{width:100%;padding:0}.topbar{color:#526672}.hero,.panel,.kpi,.finding-card,.phase,.method article{break-inside:avoid;box-shadow:none}.hero{background:#eef4f7;border-color:#cbd8df}.hero h1,.panel h2,.section-title h2,.kpi b,.finding-card h3,.phase h3,.method b{color:#13232d}.lead,.panel-body p,.finding-card p,.phase li,.findings-table td,.method span{color:#415967}.panel,.kpi,.finding-card,.phase,.method article{background:#fff;border-color:#d6e0e5}.findings-table th{background:#edf3f6;color:#354d5b}.findings-table td{border-color:#e2e9ed;color:#415967}.risk-orbit{background:#f2f6f8;box-shadow:none}.footer{page-break-before:avoid}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar"><div class="brand"><i></i><span>RED / BLUE SECURITY OPERATIONS</span></div><span>ARCHIVE ID · SA-10010-20260624</span></div>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">INTERNET EXPOSURE &amp; APPLICATION SECURITY ASSESSMENT</div>
+        <div class="tags"><span class="tag red">高危评级</span><span class="tag">历史归档</span><span class="tag">内容已脱敏</span></div>
+        <h1>10010.com<br>互联网暴露面安全评估报告</h1>
+        <p class="lead">对归档证据中的 TLS、HTTP 安全策略、跨域边界、会话属性、前端信息暴露和应用入口进行结构化整理，形成可复核的风险分级与修复路线。</p>
+        <div class="meta"><span>评估时点 <b>2026-06-24</b></span><span>数据级别 <b>内部</b></span><span>归档状态 <b>已脱敏</b></span></div>
+      </div>
+      <div class="risk-orbit"><div><small>OVERALL RISK</small><b>H</b><span>HIGH / 高危</span></div></div>
+    </section>
+
+    <div class="notice"><i>!</i><div><b>历史时点声明</b><br>本页为 2026-06-24 评估结果的脱敏归档，不代表当前系统状态。证书、策略、版本与端点可能已发生变化，处置前应在正式授权窗口内重新复核。</div></div>
+
+    <section class="kpis">
+      <article class="kpi"><small>发现总数</small><b>28</b><span>配置、信息暴露与应用边界</span></article>
+      <article class="kpi critical"><small>严重</small><b>1</b><span>归档时点的 TLS 证书时效</span></article>
+      <article class="kpi high"><small>高危</small><b>6</b><span>传输、跨域与 JSONP 边界</span></article>
+      <article class="kpi medium"><small>中危</small><b>13</b><span>安全头、访问控制与信息暴露</span></article>
+      <article class="kpi low"><small>低危 / 信息</small><b>8</b><span>版本、路径与暴露面线索</span></article>
+    </section>
+
+    <div class="grid">
+      <section class="panel">
+        <header class="panel-head"><div><small>EXECUTIVE SUMMARY</small><h2>执行摘要</h2></div><span>ARCHIVE / SANITIZED</span></header>
+        <div class="panel-body">
+          <p class="summary-lead">归档证据显示，风险主要集中在传输安全、浏览器信任边界、跨域访问策略、前端配置泄露以及认证入口的输入约束。</p>
+          <p>未在归档中形成远程代码执行或数据库注入的可复核结论，但多个配置缺口可能叠加成中间人、跨域数据泄露、点击劫持和钓鱼跳转等攻击路径。</p>
+          <div class="scope">
+            <article><small>目标识别</small><b>www.10010.com 及归档中的关联入口</b></article>
+            <article><small>证据范围</small><b>HTTP / TLS / DNS / 前端静态证据</b></article>
+            <article><small>数据处理</small><b>IP、凭据、内部路径和利用代码已移除</b></article>
+            <article><small>复核要求</small><b>仅在书面授权和明确时间窗内进行</b></article>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <header class="panel-head"><div><small>RISK DISTRIBUTION</small><h2>风险分布</h2></div><span>28 FINDINGS</span></header>
+        <div class="panel-body distribution">
+          <div class="bar-row critical"><span>严重</span><div class="bar"><i style="width:8%"></i></div><b>1</b></div>
+          <div class="bar-row high"><span>高危</span><div class="bar"><i style="width:46%"></i></div><b>6</b></div>
+          <div class="bar-row medium"><span>中危</span><div class="bar"><i style="width:100%"></i></div><b>13</b></div>
+          <div class="bar-row low"><span>低危</span><div class="bar"><i style="width:46%"></i></div><b>6</b></div>
+          <div class="bar-row info"><span>信息</span><div class="bar"><i style="width:15%"></i></div><b>2</b></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="section">
+      <div class="section-title"><div><small>PRIORITY FINDINGS</small><h2>优先复核的关键发现</h2></div><span>依据归档风险与影响排序</span></div>
+      <div class="top-findings">
+        <article class="finding-card"><header><span class="badge">严重·历史</span><small>F-01</small></header><h3>TLS 证书时效与续期机制</h3><p>原始证据记录的证书有效期已越过当前日期。不应继续使用“即将到期”表述，需要对现网证书链重新核验。</p><footer>建议：核对当前证书、自动续期、到期预警和全链路监控。</footer></article>
+        <article class="finding-card high"><header><span class="badge">高危</span><small>F-02 / F-03</small></header><h3>HTTP 强制跳转与 HSTS</h3><p>归档记录中存在明文 HTTP 链路与 HSTS 缺失。该组合会扩大首次访问降级和中间人篡改风险。</p><footer>建议：入口层统一 301/308 跳转，评估子域后逐步启用 HSTS。</footer></article>
+        <article class="finding-card high"><header><span class="badge">高危</span><small>F-04 / F-17</small></header><h3>跨域信任边界过宽</h3><p>归档证据包含 CORS 通配配置和 JSONP 回调参数约束不严格的线索，可能在登录态下扩大跨域数据访问面。</p><footer>建议：收敛 Origin 白名单，下线 JSONP 或对回调名使用严格白名单。</footer></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><div><small>REMEDIATION ROADMAP</small><h2>分阶段修复路线</h2></div><span>优先处理可叠加成攻击链的边界问题</span></div>
+      <div class="roadmap">
+        <article class="phase p0"><small>P0 · 立即核验</small><h3>传输与证书基线</h3><ul><li>重新核对现网证书链和所有入口绑定</li><li>确认 HTTP 已全面导向 HTTPS</li><li>建立证书到期、异常替换和链路监控</li></ul></article>
+        <article class="phase p1"><small>P1 · 7 日内</small><h3>浏览器与跨域边界</h3><ul><li>收敛 CORS Origin 白名单及凭据携带策略</li><li>处理 JSONP 回调、跳转参数与点击劫持风险</li><li>统一 Cookie Secure、HttpOnly 与 SameSite 基线</li></ul></article>
+        <article class="phase"><small>P2 · 30 日内</small><h3>应用治理与持续监控</h3><ul><li>清理生产前端中的环境、网关和监控配置线索</li><li>升级旧版前端依赖并引入组件清单</li><li>将安全头、限速和错误页信息纳入自动基线巡检</li></ul></article>
+      </div>
+    </section>
+
+    <section class="section panel">
+      <header class="panel-head"><div><small>FINDINGS REGISTER</small><h2>28 项发现登记表</h2></div><span>证据细节已去识别化</span></header>
+      <div class="table-scroll">
+        <table class="findings-table">
+          <thead><tr><th>#</th><th>级别</th><th>发现</th><th>脱敏证据摘要</th><th>修复要点</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td><span class="sev critical">严重</span></td><td><b>TLS 证书时效</b></td><td>归档证书有效期与当前日期不再一致，需以现网证书为准。</td><td>复核证书链、续期与预警。</td></tr>
+            <tr><td>02</td><td><span class="sev high">高危</span></td><td><b>HTTP 未强制导向 HTTPS</b></td><td>归档链路显示入口曾保留明文访问能力。</td><td>在 CDN/网关入口统一跳转。</td></tr>
+            <tr><td>03</td><td><span class="sev high">高危</span></td><td><b>HSTS 策略缺失</b></td><td>历史响应未记录 Strict-Transport-Security。</td><td>分阶段启用 max-age 与子域策略。</td></tr>
+            <tr><td>04</td><td><span class="sev high">高危</span></td><td><b>CORS 跨域范围过宽</b></td><td>归档响应曾出现通配 Origin 配置。</td><td>使用精确白名单并校验凭据模式。</td></tr>
+            <tr><td>05</td><td><span class="sev high">高危</span></td><td><b>Cookie 安全属性不完整</b></td><td>部分归档 Cookie 未同时具备 Secure 与 SameSite。</td><td>按业务场景统一属性基线。</td></tr>
+            <tr><td>06</td><td><span class="sev medium">中危</span></td><td><b>关键安全响应头不完整</b></td><td>CSP、X-Content-Type-Options、Referrer-Policy 等未形成统一基线。</td><td>在网关层按应用类型统一下发。</td></tr>
+            <tr><td>07</td><td><span class="sev medium">中危</span></td><td><b>生产前端引用非生产环境</b></td><td>前端静态资源曾包含非生产环境线索，具体域名已隐去。</td><td>使用构建时环境注入并阻断越界引用。</td></tr>
+            <tr><td>08</td><td><span class="sev medium">中危</span></td><td><b>内部网关命名暴露</b></td><td>前端资源曾包含内部网关标识，具体值已移除。</td><td>改用相对路径，由服务端完成路由。</td></tr>
+            <tr><td>09</td><td><span class="sev medium">中危</span></td><td><b>内部业务接口线索暴露</b></td><td>静态资源中可识别业务日志类接口，路径已脱敏。</td><td>核验鉴权、调用方和最小暴露面。</td></tr>
+            <tr><td>10</td><td><span class="sev medium">中危</span></td><td><b>前端监控配置泄露</b></td><td>归档中曾包含 APM 标识与调用凭据，所有值已移除。</td><td>立即轮换旧凭据，改为服务端注入。</td></tr>
+            <tr><td>11</td><td><span class="sev medium">中危</span></td><td><b>过时的页面嵌入策略</b></td><td>归档响应曾使用主流浏览器不再支持的语法。</td><td>以 CSP frame-ancestors 为唯一可控来源。</td></tr>
+            <tr><td>12</td><td><span class="sev low">低危</span></td><td><b>服务器类型暴露</b></td><td>响应可识别网关或 Web 服务器类型。</td><td>统一隐藏产品和版本信息。</td></tr>
+            <tr><td>13</td><td><span class="sev low">低危</span></td><td><b>前端依赖版本偏旧</b></td><td>归档静态资源指向已进入维护周期的依赖版本。</td><td>升级依赖并引入 SBOM 与漏洞扫描。</td></tr>
+            <tr><td>14</td><td><span class="sev low">低危</span></td><td><b>robots.txt 暴露历史路径</b></td><td>公开文件曾列出多个业务路径，具体路径已移除。</td><td>确认路径已下线或由真实访问控制保护。</td></tr>
+            <tr><td>15</td><td><span class="sev low">低危</span></td><td><b>重定向暴露非标准端口</b></td><td>历史重定向曾带出后端端口，端口值已隐去。</td><td>使用外部标准 Origin 构造跳转地址。</td></tr>
+            <tr><td>16</td><td><span class="sev low">低危</span></td><td><b>前端框架版本暴露</b></td><td>静态资源可推断框架及构建版本。</td><td>升级到在支持周期内的版本。</td></tr>
+            <tr><td>17</td><td><span class="sev high">高危</span></td><td><b>JSONP 回调名缺少严格约束</b></td><td>统一认证中心的某公开接口回调参数可影响响应形态，端点已脱敏。</td><td>优先下线 JSONP，否则只允许固定回调集。</td></tr>
+            <tr><td>18</td><td><span class="sev high">高危</span></td><td><b>第二处 JSONP 边界问题</b></td><td>另一个会话辅助接口存在同类回调约束线索。</td><td>统一改造为 JSON + 严格 CORS 策略。</td></tr>
+            <tr><td>19</td><td><span class="sev medium">中危</span></td><td><b>静态资源中的 IP 暴露</b></td><td>前端文件曾引用真实 IP，本归档已处理为 <code>211.94.*.*</code>。</td><td>使用受控域名与 CDN，清理原始 IP 引用。</td></tr>
+            <tr><td>20</td><td><span class="sev medium">中危</span></td><td><b>非生产域名线索</b></td><td>归档中可识别多个非生产子域名，已替换为通用占位符。</td><td>清理死链，检查 DNS 残留与子域接管风险。</td></tr>
+            <tr><td>21</td><td><span class="sev medium">中危</span></td><td><b>客户中心公开入口过多</b></td><td>多个入口在未登录状态可访问，未归档到敏感数据直接返回证据。</td><td>区分公开页面与业务 API，为后者加强鉴权。</td></tr>
+            <tr><td>22</td><td><span class="sev medium">中危</span></td><td><b>默认错误响应泄露框架特征</b></td><td>不存在路径的响应包含框架式错误字段。</td><td>统一错误页与 API 错误码，隐藏实现细节。</td></tr>
+            <tr><td>23</td><td><span class="sev medium">中危</span></td><td><b>认证入口限速线索不充分</b></td><td>归档请求未观察到明确的入口级限速，不代表后端一定无防护。</td><td>对账号、IP、设备与行为风险综合限速。</td></tr>
+            <tr><td>24</td><td><span class="sev medium">中危</span></td><td><b>页面嵌入边界不足</b></td><td>归档结果表明部分页面缺少有效 frame-ancestors 约束。</td><td>对敏感操作页面禁止第三方嵌入。</td></tr>
+            <tr><td>25</td><td><span class="sev medium">中危</span></td><td><b>登录后跳转参数约束不明确</b></td><td>跳转参数可被页面接收，归档未证实已完成外域跳转。</td><td>使用站内路径白名单，禁止协议与绝对地址。</td></tr>
+            <tr><td>26</td><td><span class="sev info">信息</span></td><td><b>WAF / CDN 防护覆盖</b></td><td>归档显示多层入口防护，对明显恶意字符有拦截记录。</td><td>将业务逻辑类边界放在应用本身处理。</td></tr>
+            <tr><td>27</td><td><span class="sev info">信息</span></td><td><b>子域资产面较大</b></td><td>归档 DNS 线索涵盖管理、监控、数据与移动入口，具体地址已移除。</td><td>建立资产台账、责任人和定期收敛机制。</td></tr>
+            <tr><td>28</td><td><span class="sev low">低危</span></td><td><b>第三方前端插件标识暴露</b></td><td>归档前端中包含第三方插件应用标识，具体值已移除。</td><td>确认标识仅用于公开客户端，不具备授权能力。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-title"><div><small>METHODOLOGY &amp; GOVERNANCE</small><h2>证据来源与归档要求</h2></div><span>不包含可直接复用的操作命令</span></div>
+      <div class="method">
+        <article><b>HTTP / TLS</b><span>响应头、证书链、协议与跳转策略</span></article>
+        <article><b>DNS / 资产</b><span>公开解析、子域与边界入口归档</span></article>
+        <article><b>前端静态证据</b><span>构建产物、环境引用、依赖和第三方配置</span></article>
+        <article><b>复核治理</b><span>要求书面授权、明确时间窗、来源 IP 和应急联络人</span></article>
+      </div>
+    </section>
+
+    <footer class="footer"><span><b>10010.com 安全评估报告</b> · 脱敏归档版</span><span>生成日期 2026-08-31 · 不得作为现网状态证明</span></footer>
+  </main>
+</body>
+</html>

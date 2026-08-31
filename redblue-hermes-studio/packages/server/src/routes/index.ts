@@ -16,6 +16,7 @@ import { apiDocsRoutes } from './api-docs'
 import { themeRoutes } from './theme'
 import { claudeCodeProxyRoutes } from './claude-code-proxy'
 import { codexProxyRoutes } from './codex-proxy'
+import { cyberDefenseRoutes } from './cyber-defense'
 
 // Hermes route modules
 import { sessionRoutes } from './hermes/sessions'
@@ -89,6 +90,7 @@ export function registerRoutes(app: any, authMiddleware: Array<(ctx: Context, ne
   app.use(themeRoutes.routes())
   app.use(appRelayRoutes.routes())
   app.use(socialMessageRoutes.routes())
+  app.use(cyberDefenseRoutes.routes())
   app.use(sessionRoutes.routes())
   app.use(profileRoutes.routes())
   app.use(skillRoutes.routes())
