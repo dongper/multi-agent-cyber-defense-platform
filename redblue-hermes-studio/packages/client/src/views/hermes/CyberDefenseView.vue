@@ -46,7 +46,7 @@ const archivedReports = [
     coverLabel: 'INTERNET EXPOSURE ASSESSMENT',
     coverTitle: '10010.com\n安全评估报告',
     coverMeta: '2026 · RED / BLUE ASSESSMENT',
-    date: '2026-06-24',
+    date: '2026-08-29',
     title: '10010.com 互联网暴露面安全评估',
     description: '整理 28 项风险发现、安全头与 TLS 配置、应用边界、资产暴露面及分阶段修复建议。IP、内部路径、凭据、利用代码与可识别细节均已脱敏，并标注为历史时点结论。',
     facts: [
@@ -55,7 +55,7 @@ const archivedReports = [
       { value: '已脱敏', label: '归档状态' },
     ],
     url: SANITIZED_10010_REPORT_URL,
-    downloadName: '10010安全评估报告-脱敏版-20260624.html',
+    downloadName: '10010安全评估报告-脱敏版-20260829.html',
     tone: 'red',
   },
   {
