@@ -1,15 +1,15 @@
 {
   "name": "hermes-web-ui",
   "version": "0.6.47",
-  "description": "Self-hosted AI chat dashboard for Hermes Agent — multi-model web UI with multi-platform integration",
+  "description": "Multi-agent cyber defense platform for authorized red-team validation, alert triage, response orchestration, and incident reporting",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EKKOLearnAI/hermes-studio.git"
+    "url": "https://github.com/dongper/multi-agent-cyber-defense-platform.git"
   },
-  "homepage": "https://hermes-studio.ai",
+  "homepage": "https://github.com/dongper/multi-agent-cyber-defense-platform",
   "license": "BSL-1.1",
   "engines": {
-    "node": ">=23.0.0"
+    "node": ">=22.12.0"
   },
   "keywords": [
     "hermes",
@@ -39,6 +39,12 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "cross-env HERMES_WEB_UI_BACKEND_PORT=8647 vite --host --port 8649 --strictPort",
     "dev:server": "nodemon",
+    "dev:redblue": "concurrently \"npm run dev:redblue:server\" \"npm run dev:redblue:client\"",
+    "dev:security": "npm run dev:redblue",
+    "deploy:local": "bash scripts/start-security-platform.sh",
+    "deploy:docker": "bash scripts/deploy-security-platform.sh",
+    "dev:redblue:client": "cross-env HERMES_WEB_UI_FRONTEND_PORT=8659 HERMES_WEB_UI_BACKEND_PORT=8657 vite --host --port 8659 --strictPort",
+    "dev:redblue:server": "cross-env PORT=8657 NODE_ENV=development TS_NODE_PROJECT=packages/server/tsconfig.json HERMES_WEB_UI_DISABLE_GATEWAY_AUTOSTART=1 HERMES_WEB_UI_STOP_GATEWAYS_ON_SHUTDOWN=0 node --no-warnings -r ts-node/register packages/server/src/index.ts",
     "build": "npm run openapi:generate && vue-tsc -b && vite build && tsc --noEmit -p packages/server/tsconfig.json && node scripts/build-server.mjs",
     "harness:check": "node scripts/harness-check.mjs",
     "verify:sharp-runtime": "node scripts/verify-sharp-runtime.mjs",
@@ -89,7 +95,8 @@
     "sharp": "^0.35.3",
     "sherpa-onnx-node": "1.13.3",
     "socket.io": "^4.8.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
     "sherpa-onnx-darwin-arm64": "1.13.3",

@@ -1,3 +1,4 @@
+# 保留上游基础运行时镜像以兼容现有智能体桥接能力；产品对外名称由本项目统一定义。
 ARG BASE_IMAGE=nousresearch/hermes-agent:latest
 FROM ${BASE_IMAGE}
 
